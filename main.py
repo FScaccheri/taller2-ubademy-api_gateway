@@ -1,6 +1,8 @@
 import uvicorn
 import requests
+import os
 
+from dotenv import load_dotenv
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -11,10 +13,8 @@ from jose import JWTError, jwt
 from models.token_data import TokenData
 from models.token import Token
 
-
-USERS_API_HOST = '0.0.0.0'
-USERS_API_PORT = '8001'
-USERS_DOMAIN = 'http://' + USERS_API_HOST + ':' + USERS_API_PORT
+load_dotenv()
+domain = os.getenv("USERS_DOMAIN", "http://localhost:8001")
 
 SECRET_KEY = '944211eb42c3b243739503a1d36225a91317cffe7d1b445add87920b380ddae5'
 ALGORITHM = 'HS256'
@@ -57,7 +57,7 @@ def verify_password(plain_password, hashed_password):
 
 
 def get_user(username: str):
-    response = requests.get(USERS_DOMAIN + '/users/' + username)
+    response = requests.get(domain + '/users/' + username)
     if response.status_code == 200:
         return response.json()
 
@@ -130,7 +130,7 @@ async def read_own_items(current_user: dict = Depends(get_current_active_user)):
 
 @app.get('/users/ping', dependencies=[Depends(authenticate_token)])
 async def ping():
-    response = requests.get(USERS_DOMAIN + '/pong')
+    response = requests.get(domain + '/pong')
     return response.json()
 
 
