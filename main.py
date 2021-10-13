@@ -141,19 +141,11 @@ async def ping():
 #Request: https://www.starlette.io/requests/
 async def login(request: Request):
     #The documentation uses data instead of json but it is not updated
-    response = requests.post('http://localhost:8007' + request.url.path, json = await request.json())
+    response = requests.post(users_backend_url + request.url.path, json = await request.json())
     return response.json()
-    """aux_user = session.query(db_user.User).filter(db_user.User.email == login_data.email).first()
-    #print(f"email:{aux_user.email} hash:{aux_user.hashed_password} name:{aux_user.name}")
-    if (aux_user == None):
-        raise HTTPException(status_code=400, detail='User not found')
-    if (pbkdf2_sha256.verify(login_data.password, aux_user.hashed_password)):
-        return {'message': 'Correct user and password'}
-    else:
-        return {'message': 'Incorrect password'}"""
 
 #curl -X HOST http://localhost:8000/login
 
 if __name__ == '__main__':
-    #uvicorn.run(app, host='0.0.0.0', port=os.environ.get('PORT'))
-    uvicorn.run(app, host='0.0.0.0', port=8000)
+    uvicorn.run(app, host='0.0.0.0', port=os.environ.get('PORT'))
+    #uvicorn.run(app, host='0.0.0.0', port=8000)
