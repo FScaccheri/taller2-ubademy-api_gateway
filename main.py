@@ -4,11 +4,12 @@ import os
 
 from dotenv import load_dotenv
 from typing import Optional
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from jose import JWTError, jwt
+import os
 
 from models.token_data import TokenData
 from models.token import Token
@@ -27,6 +28,8 @@ app = FastAPI()
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
+
+users_backend_url = os.environ.get('USERS_BACKEND_LINK')
 
 
 def credentials_exception():
@@ -134,5 +137,15 @@ async def ping():
     return response.json()
 
 
+@app.post('/login/')
+#Request: https://www.starlette.io/requests/
+async def login(request: Request):
+    #The documentation uses data instead of json but it is not updated
+    response = requests.post(users_backend_url + request.url.path, json = await request.json())
+    return response.json()
+
+#curl -X HOST http://localhost:8000/login
+
 if __name__ == '__main__':
-    uvicorn.run(app, host='0.0.0.0', port=8000)
+    uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('BACKEND_API_GATEWAY_PORT')))
+    #uvicorn.run(app, host='0.0.0.0', port=8000)
