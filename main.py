@@ -147,5 +147,5 @@ async def login(request: Request):
 #curl -X HOST http://localhost:8000/login
 
 if __name__ == '__main__':
-    uvicorn.run(app, host='0.0.0.0', port=os.environ.get('PORT'))
+    uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('BACKEND_API_GATEWAY_PORT')))
     #uvicorn.run(app, host='0.0.0.0', port=8000)
