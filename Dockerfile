@@ -3,7 +3,7 @@ FROM python
 WORKDIR .
 COPY . .
 
-ENV USERS_BACKEND_URL='http://localhost:8001'
+ENV USERS_BACKEND_URL='backend_users:8001'
 ENV PORT=8000
 
 EXPOSE $PORT
