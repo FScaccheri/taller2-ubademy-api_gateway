@@ -12,4 +12,11 @@ jobs:
         with:
           python-version: '3.x'
       - run: pip install -r requirements.txt
-      - run: pytest
+      - name: Generate coverage report
+      - run: pip install pytest-cov
+      - run: pytest --cov=./ --cov-report=xml
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
