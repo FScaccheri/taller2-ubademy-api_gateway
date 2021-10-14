@@ -1,8 +1,6 @@
 import uvicorn
 import requests
-import os
 
-from dotenv import load_dotenv
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -14,13 +12,12 @@ import os
 from models.token_data import TokenData
 from models.token import Token
 
-load_dotenv()
-domain = os.getenv("USERS_DOMAIN", "http://localhost:8001")
 
 SECRET_KEY = '944211eb42c3b243739503a1d36225a91317cffe7d1b445add87920b380ddae5'
 ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
+USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL')
 
 app = FastAPI()
 
@@ -28,8 +25,6 @@ app = FastAPI()
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
-
-users_backend_url = os.environ.get('USERS_BACKEND_LINK')
 
 
 def credentials_exception():
@@ -60,7 +55,7 @@ def verify_password(plain_password, hashed_password):
 
 
 def get_user(username: str):
-    response = requests.get(domain + '/users/' + username)
+    response = requests.get(USERS_BACKEND_URL + '/users/' + username)
     if response.status_code == 200:
         return response.json()
 
@@ -133,7 +128,7 @@ async def read_own_items(current_user: dict = Depends(get_current_active_user)):
 
 @app.get('/users/ping', dependencies=[Depends(authenticate_token)])
 async def ping():
-    response = requests.get(domain + '/pong')
+    response = requests.get(USERS_BACKEND_URL + '/pong')
     return response.json()
 
 
@@ -141,11 +136,9 @@ async def ping():
 #Request: https://www.starlette.io/requests/
 async def login(request: Request):
     #The documentation uses data instead of json but it is not updated
-    response = requests.post(users_backend_url + request.url.path, json = await request.json())
+    response = requests.post(USERS_BACKEND_URL + request.url.path, json=await request.json())
     return response.json()
 
-#curl -X HOST http://localhost:8000/login
 
 if __name__ == '__main__':
-    uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('BACKEND_API_GATEWAY_PORT')))
-    #uvicorn.run(app, host='0.0.0.0', port=8000)
+    uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
