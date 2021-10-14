@@ -4,6 +4,7 @@ import requests
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -21,6 +22,13 @@ USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL')
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*']
+)
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 

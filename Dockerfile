@@ -3,11 +3,14 @@ FROM python
 WORKDIR .
 COPY . .
 
-ENV USERS_BACKEND_URL='http://0.0.0.0:8001'
+ENV USERS_BACKEND_URL='http://localhost:8001'
 ENV PORT=8000
 
 EXPOSE $PORT
 
 RUN pip install -r requirements.txt
+RUN pip install newrelic
 
-CMD python main.py
+ENV NEW_RELIC_CONFIG_FILE='newrelic.ini'
+
+CMD newrelic-admin run-program python main.py
