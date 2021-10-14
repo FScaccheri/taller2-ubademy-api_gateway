@@ -13,6 +13,7 @@ jobs:
           python-version: '3.x'
       - run: pip install -r requirements.txt
       - run: pip install pytest-cov
+      - run: pip install codecov
       - run: pytest --cov=./ --cov-report=xml
       
       - name: Upload coverage to Codecov
