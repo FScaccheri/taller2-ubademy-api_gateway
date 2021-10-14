@@ -1,0 +1,20 @@
+version: '3.3'
+services: 
+  backend_users:
+    build: ../taller2-ubademy-users
+    container_name: backend_users
+    image: backend_users
+    expose:
+      - "8001"
+
+  backend_api_gateway:
+    build: .
+    container_name: backend_api_gateway
+    image: backend_api_gateway
+    ports:
+      - "8516:8000"
+    expose:
+      - "8000"
+    depends_on:
+      - backend_users
+
