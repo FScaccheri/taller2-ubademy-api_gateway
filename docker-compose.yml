@@ -6,6 +6,8 @@ services:
     image: backend_users
     expose:
       - "8001"
+    volumes:
+      - ./../taller2-ubademy-users:/app
 
   backend_api_gateway:
     build: .
@@ -15,6 +17,8 @@ services:
       - "8516:8000"
     expose:
       - "8000"
+    volumes:
+      - ./:/app
     depends_on:
       - backend_users
 

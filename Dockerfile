@@ -1,6 +1,6 @@
 FROM python
 
-WORKDIR .
+WORKDIR /app
 COPY . .
 
 ENV USERS_BACKEND_URL='http://backend_users:8001'
