@@ -18,7 +18,7 @@ SECRET_KEY = '944211eb42c3b243739503a1d36225a91317cffe7d1b445add87920b380ddae5'
 ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL')
+USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL', 'http://0.0.0.0:8001')
 
 app = FastAPI()
 
@@ -88,6 +88,19 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
+async def get_current_user(token_data: TokenData = Depends(authenticate_token)):
+    user = get_user(username=token_data.username)
+    if user is None:
+        raise credentials_exception()
+    return user
+
+
+async def get_current_active_user(current_user: dict = Depends(get_current_user)):
+    if current_user['disabled']:
+        raise HTTPException(status_code=400, detail='Inactive user')
+    return current_user
+
+
 # ENDPOINTS:
 
 @app.get('/')
@@ -109,19 +122,6 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         data={'sub': user['username']}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type='bearer')
-
-
-async def get_current_user(token_data: TokenData = Depends(authenticate_token)):
-    user = get_user(username=token_data.username)
-    if user is None:
-        raise credentials_exception()
-    return user
-
-
-async def get_current_active_user(current_user: dict = Depends(get_current_user)):
-    if current_user['disabled']:
-        raise HTTPException(status_code=400, detail='Inactive user')
-    return current_user
 
 
 @app.get('/users/me')
@@ -146,6 +146,20 @@ async def login(request: Request):
     #The documentation uses data instead of json but it is not updated
     response = requests.post(USERS_BACKEND_URL + request.url.path, json=await request.json())
     return response.json()
+
+
+@app.post('/sign_up')
+async def sign_up(request: Request):
+    response = requests.post(USERS_BACKEND_URL + '/create', json=await request.json())
+    if response.status_code != 200:
+        return {'error': True}
+    # Creo el token
+    user = response.json() # Asumo que en el response body llega la data del usuario
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={'sub': user['email']}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type='bearer')
 
 
 if __name__ == '__main__':
