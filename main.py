@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 import os
+from models.login_data import Login
 
 from models.token_data import TokenData
 from models.token import Token
@@ -148,16 +149,16 @@ async def login(request: Request):
     return response.json()
 
 
-@app.post('/sign_up')
+@app.post('/sign_up/')
 async def sign_up(request: Request):
-    response = requests.post(USERS_BACKEND_URL + '/create', json=await request.json())
+    response = requests.post(USERS_BACKEND_URL + '/create/', json=await request.json())
     if response.status_code != 200:
         return {'error': True}
     # Creo el token
-    user = response.json() # Asumo que en el response body llega la data del usuario
+    user = Login(response.json()) # Asumo que en el response body llega la data del usuario
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={'sub': user['email']}, expires_delta=access_token_expires
+        data={'sub': user.email}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type='bearer')
 
