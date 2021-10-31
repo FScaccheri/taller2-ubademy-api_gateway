@@ -19,6 +19,7 @@ ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL')
+BUSINESS_BACKEND_URL = os.environ.get('BUSINESS_BACKEND_URL')
 
 app = FastAPI()
 
@@ -147,6 +148,18 @@ async def login(request: Request):
     response = requests.post(USERS_BACKEND_URL + request.url.path, json=await request.json())
     return response.json()
 
+
+# BUSINESS BACKEND
+
+@app.get('/courses/ping')
+async def ping():
+    response = requests.get(BUSINESS_BACKEND_URL + '/ping')
+    return response.json()
+
+@app.post('/courses/create')#TODO: Add authentication
+async def create_course(request: Request):
+    response = requests.post(BUSINESS_BACKEND_URL + '/create', json=await request.json())
+    return response.json()
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))

@@ -8,6 +8,15 @@ services:
       - "8001"
     volumes:
       - ./../taller2-ubademy-users:/app
+      
+  backend_business:
+    build: ../taller2-ubademy-business
+    container_name: backend_business
+    image: backend_business
+    expose:
+      - "8002"
+    volumes:
+      - ./../taller2-ubademy-business:/app 
 
   backend_api_gateway:
     build: .
@@ -21,4 +30,5 @@ services:
       - ./:/app
     depends_on:
       - backend_users
+      - backend_business
 
