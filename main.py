@@ -146,8 +146,21 @@ async def ping():
 #Request: https://www.starlette.io/requests/
 async def login(request: Request):
     #The documentation uses data instead of json but it is not updated
-    response = requests.post(USERS_BACKEND_URL + request.url.path, json=await request.json())
-    return response.json()
+    request_json = await request.json()
+    response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
+    response_json = response.json()
+    if (response.status_code != 200 or response_json['status'] == 'error'):
+        public_status_messages.get('failed_authentication')
+
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={'sub': request_json['email']}, expires_delta=access_token_expires
+    )
+    token_json = Token(access_token=access_token, token_type='bearer').dict()
+    return {
+        **response.json(),
+        **token_json
+    }
 
 
 @app.post('/sign_up/')
