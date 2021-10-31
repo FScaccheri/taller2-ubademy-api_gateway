@@ -10,6 +10,7 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 import os
 
+from configuration.status_messages import public_status_messages
 from models.token_data import TokenData
 from models.token import Token
 
@@ -92,7 +93,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 @app.get('/')
 async def home():
-    return {'message': 'Hello API gateway!'}
+    return public_status_messages.get('hello_api_gateway')
 
 
 @app.post('/token')
@@ -101,7 +102,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Incorrect username or password',
+            detail=public_status_messages.get_message('failed_authentication'),
             headers={'WWW-Authenticate': 'Bearer'}
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
