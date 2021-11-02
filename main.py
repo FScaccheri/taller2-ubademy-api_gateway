@@ -150,7 +150,7 @@ async def login(request: Request):
     response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
     response_json = response.json()
     if (response.status_code != 200 or response_json['status'] == 'error'):
-        public_status_messages.get('failed_authentication')
+        return public_status_messages.get('failed_authentication')
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
@@ -176,6 +176,30 @@ async def sign_up(request: Request):
         data={'sub': user['email']}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type='bearer')
+
+
+@app.post('/admin_login')
+async def admin_login(request: Request):
+    request_json = await request.json()
+    response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
+    response_json = response.json()
+    if (response.status_code != 200 or response_json['status'] == 'error'):
+        return public_status_messages.get('failed_authentication')
+
+    access_token_data = {
+        'sub': request_json['username'],
+        'admin': True
+    }
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data=access_token_data,
+        expires_delta=access_token_expires
+    )
+    token_json = Token(access_token=access_token, token_type='bearer').dict()
+    return {
+        **response.json(),
+        **token_json
+    }
 
 
 if __name__ == '__main__':
