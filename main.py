@@ -159,7 +159,12 @@ async def ping():
 @app.post('/courses/create')#TODO: Add authentication
 async def create_course(request: Request):
     response = requests.post(BUSINESS_BACKEND_URL + '/create', json=await request.json())
-    return response.json()
+    print("STATUS: ", response.status_code)
+    response = response.json()
+    if response['status'] == 'error':
+        raise HTTPException(status_code=405, detail='Could not create course')#TODO: See if status code and message are ok 
+        #return {'status': 'error', 'message': response['message']}
+    return response
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
