@@ -48,25 +48,18 @@ def authenticate_token(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get('sub')
+        is_admin: bool = payload.get('admin')
         if username is None:
             raise credentials_exception()
-        return TokenData(username=username)
+        return TokenData(username=username, is_admin=is_admin)
     except JWTError:
         raise credentials_exception()
 
 
-# TODO: Por ahora esta duplicado con el de arriba.
-#   Refactorizar para que este dependa de ese
-def authenticate_admin_token(token: str = Depends(oauth2_scheme)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get('sub')
-        is_admin: bool = payload.get('admin')
-        if username is None or not is_admin:
-            raise credentials_exception()
-        return TokenData(username=username)
-    except JWTError:
+def authenticate_admin_token(token_data: TokenData = Depends(authenticate_token)):
+    if not token_data.is_admin:
         raise credentials_exception()
+    return TokenData
 
 
 def get_password_hash(password):
