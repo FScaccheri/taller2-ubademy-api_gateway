@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 import os
-from models.login_data import Login
 
 from configuration.status_messages import public_status_messages
 from models.token_data import TokenData
@@ -50,6 +49,20 @@ def authenticate_token(token: str = Depends(oauth2_scheme)):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get('sub')
         if username is None:
+            raise credentials_exception()
+        return TokenData(username=username)
+    except JWTError:
+        raise credentials_exception()
+
+
+# TODO: Por ahora esta duplicado con el de arriba.
+#   Refactorizar para que este dependa de ese
+def authenticate_admin_token(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get('sub')
+        is_admin: bool = payload.get('admin')
+        if username is None or not is_admin:
             raise credentials_exception()
         return TokenData(username=username)
     except JWTError:
@@ -143,9 +156,9 @@ async def ping():
 
 
 @app.post('/login/')
-#Request: https://www.starlette.io/requests/
+# Request: https://www.starlette.io/requests/
 async def login(request: Request):
-    #The documentation uses data instead of json but it is not updated
+    # The documentation uses data instead of json but it is not updated
     request_json = await request.json()
     response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
     response_json = response.json()
@@ -177,6 +190,10 @@ async def sign_up(request: Request):
     )
     return Token(access_token=access_token, token_type='bearer')
 
+
+@app.get('/admin/users_count', dependencies=[Depends(authenticate_admin_token)])
+async def users_count():
+    return {"status": "ok", "count": 15}
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
