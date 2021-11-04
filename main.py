@@ -169,9 +169,11 @@ async def ping():
     response = requests.get(BUSINESS_BACKEND_URL + '/ping')
     return response.json()
 
-@app.post('/courses/create', dependencies=[Depends(authenticate_token)])#TODO: Add authentication
-async def create_course(request: Request):
-    response = requests.post(BUSINESS_BACKEND_URL + '/create', json=await request.json())
+@app.post('/courses/create')
+async def create_course(request: Request, current_user: dict = Depends(get_current_active_user)):
+    request_json = await request.json()
+    request_json['email'] = current_user["email"]
+    response = requests.post(BUSINESS_BACKEND_URL + '/create', json=request_json)
     response = response.json()
     if response['status'] == 'error':
         raise HTTPException(status_code=405, detail='Could not create course')#TODO: See if status code and message are ok 
