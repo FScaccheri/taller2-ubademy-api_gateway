@@ -1,0 +1,4 @@
+{
+  "hello_api_gateway": {"status":  "ok", "message":  "Hello API gateway!"},
+  "failed_authentication": {"status":  "error", "message":  "incorrect username or password"}
+}

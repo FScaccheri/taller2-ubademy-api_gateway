@@ -9,7 +9,9 @@ from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 import os
+from models.login_data import Login
 
+from configuration.status_messages import public_status_messages
 from models.token_data import TokenData
 from models.token import Token
 
@@ -18,8 +20,9 @@ SECRET_KEY = '944211eb42c3b243739503a1d36225a91317cffe7d1b445add87920b380ddae5'
 ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL')
+USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL', 'http://0.0.0.0:8001')
 BUSINESS_BACKEND_URL = os.environ.get('BUSINESS_BACKEND_URL')
+
 
 app = FastAPI()
 
@@ -89,29 +92,6 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
-# ENDPOINTS:
-
-@app.get('/')
-async def home():
-    return {'message': 'Hello API gateway!'}
-
-
-@app.post('/token')
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Incorrect username or password',
-            headers={'WWW-Authenticate': 'Bearer'}
-        )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={'sub': user['username']}, expires_delta=access_token_expires
-    )
-    return Token(access_token=access_token, token_type='bearer')
-
-
 async def get_current_user(token_data: TokenData = Depends(authenticate_token)):
     user = get_user(username=token_data.username)
     if user is None:
@@ -123,6 +103,29 @@ async def get_current_active_user(current_user: dict = Depends(get_current_user)
     if current_user['disabled']:
         raise HTTPException(status_code=400, detail='Inactive user')
     return current_user
+
+
+# ENDPOINTS:
+
+@app.get('/')
+async def home():
+    return public_status_messages.get('hello_api_gateway')
+
+
+@app.post('/token')
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=public_status_messages.get_message('failed_authentication'),
+            headers={'WWW-Authenticate': 'Bearer'}
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={'sub': user['username']}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type='bearer')
 
 
 @app.get('/users/me')
@@ -144,12 +147,12 @@ async def ping():
 @app.post('/login/')
 # Request: https://www.starlette.io/requests/
 async def login(request: Request):
-    # The documentation uses data instead of json but it is not updated
+    #The documentation uses data instead of json but it is not updated
     request_json = await request.json()
     response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
     response_json = response.json()
     if (response.status_code != 200 or response_json['status'] == 'error'):
-        raise HTTPException(status_code=400, detail="failed auth")
+        return public_status_messages.get('failed_authentication')
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
@@ -161,6 +164,43 @@ async def login(request: Request):
         **token_json
     }
 
+@app.post('/sign_up/')
+async def sign_up(request: Request):
+    response = requests.post(USERS_BACKEND_URL + '/create/', json=await request.json())
+    response_json = response.json()
+    if response.status_code != 200 or response_json['status'] == 'error':
+        return {'status': 'error', 'message': response_json.get('message')}
+    # Creo el token
+    user = response_json['user']
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={'sub': user['email']}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type='bearer')
+
+
+@app.post('/admin_login')
+async def admin_login(request: Request):
+    request_json = await request.json()
+    response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
+    response_json = response.json()
+    if (response.status_code != 200 or response_json['status'] == 'error'):
+        return public_status_messages.get('failed_authentication')
+
+    access_token_data = {
+        'sub': request_json['username'],
+        'admin': True
+    }
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data=access_token_data,
+        expires_delta=access_token_expires
+    )
+    token_json = Token(access_token=access_token, token_type='bearer').dict()
+    return {
+        **response.json(),
+        **token_json
+    }
 
 # BUSINESS BACKEND
 
