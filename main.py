@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 import os
-from models.login_data import Login
 
 from configuration.status_messages import public_status_messages
 from models.token_data import TokenData
@@ -49,11 +48,18 @@ def authenticate_token(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get('sub')
+        is_admin: bool = payload.get('admin')
         if username is None:
             raise credentials_exception()
-        return TokenData(username=username)
+        return TokenData(username=username, is_admin=is_admin)
     except JWTError:
         raise credentials_exception()
+
+
+def authenticate_admin_token(token_data: TokenData = Depends(authenticate_token)):
+    if not token_data.is_admin:
+        raise credentials_exception()
+    return TokenData
 
 
 def get_password_hash(password):
@@ -143,9 +149,9 @@ async def ping():
 
 
 @app.post('/login/')
-#Request: https://www.starlette.io/requests/
+# Request: https://www.starlette.io/requests/
 async def login(request: Request):
-    #The documentation uses data instead of json but it is not updated
+    # The documentation uses data instead of json but it is not updated
     request_json = await request.json()
     response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
     response_json = response.json()
@@ -176,6 +182,11 @@ async def sign_up(request: Request):
         data={'sub': user['email']}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type='bearer')
+
+
+@app.get('/admin/users_count', dependencies=[Depends(authenticate_admin_token)])
+async def users_count():
+    return {"status": "ok", "count": 15}
 
 
 @app.post('/admin_login')
