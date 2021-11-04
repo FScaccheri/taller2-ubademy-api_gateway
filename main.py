@@ -142,11 +142,24 @@ async def ping():
 
 
 @app.post('/login/')
-#Request: https://www.starlette.io/requests/
+# Request: https://www.starlette.io/requests/
 async def login(request: Request):
-    #The documentation uses data instead of json but it is not updated
-    response = requests.post(USERS_BACKEND_URL + request.url.path, json=await request.json())
-    return response.json()
+    # The documentation uses data instead of json but it is not updated
+    request_json = await request.json()
+    response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
+    response_json = response.json()
+    if (response.status_code != 200 or response_json['status'] == 'error'):
+        raise HTTPException(status_code=400, detail="failed auth")
+
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={'sub': request_json['email']}, expires_delta=access_token_expires
+    )
+    token_json = Token(access_token=access_token, token_type='bearer').dict()
+    return {
+        **response.json(),
+        **token_json
+    }
 
 
 # BUSINESS BACKEND
@@ -156,14 +169,12 @@ async def ping():
     response = requests.get(BUSINESS_BACKEND_URL + '/ping')
     return response.json()
 
-@app.post('/courses/create')#TODO: Add authentication
+@app.post('/courses/create', dependencies=[Depends(authenticate_token)])#TODO: Add authentication
 async def create_course(request: Request):
     response = requests.post(BUSINESS_BACKEND_URL + '/create', json=await request.json())
-    print("STATUS: ", response.status_code)
     response = response.json()
     if response['status'] == 'error':
         raise HTTPException(status_code=405, detail='Could not create course')#TODO: See if status code and message are ok 
-        #return {'status': 'error', 'message': response['message']}
     return response
 
 if __name__ == '__main__':
