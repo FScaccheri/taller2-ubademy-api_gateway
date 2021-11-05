@@ -13,6 +13,7 @@ import os
 from configuration.status_messages import public_status_messages
 from models.token_data import TokenData
 from models.token import Token
+from models.profiles import ProfileUpdate
 
 
 SECRET_KEY = '944211eb42c3b243739503a1d36225a91317cffe7d1b445add87920b380ddae5'
@@ -20,6 +21,7 @@ ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL', 'http://0.0.0.0:8001')
+BUSINESS_BACKEND_URL = os.environ.get('BUSINESS_BACKEND_URL', 'http://0.0.0.0:8002')
 
 app = FastAPI()
 
@@ -211,6 +213,18 @@ async def admin_login(request: Request):
         **response.json(),
         **token_json
     }
+
+
+@app.put('/profile/{profile_id}/update')
+async def udpate_profile(profile_id: int, profile_update: ProfileUpdate):
+    response = requests.put(
+        BUSINESS_BACKEND_URL + f'/profile/#{profile_id}/update',
+        json=profile_update.dict()
+    )
+    response_json = response.json()
+    if (response.status_code != 200 or response_json['status'] == 'error'):
+        return public_status_messages.get('profile_update_error')
+    return public_status_messages.get('profile_update_success')
 
 
 if __name__ == '__main__':

@@ -1,4 +1,6 @@
 {
   "hello_api_gateway": {"status":  "ok", "message":  "Hello API gateway!"},
-  "failed_authentication": {"status":  "error", "message":  "incorrect username or password"}
+  "failed_authentication": {"status":  "error", "message":  "incorrect username or password"},
+  "profile_update_success": {"status": "ok", "message": "updated profile successfully"},
+  "profile_update_error": {"status": "error", "message": "error updating profile"}
 }
