@@ -202,7 +202,7 @@ async def admin_login(request: Request):
         return public_status_messages.get('failed_authentication')
 
     access_token_data = {
-        'sub': request_json['username'],
+        'sub': request_json['email'],
         'admin': True
     }
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
