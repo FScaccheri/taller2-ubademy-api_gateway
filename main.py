@@ -151,6 +151,7 @@ async def login(request: Request):
     request_json = await request.json()
     response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
     response_json = response.json()
+    print(response_json)
     if (response.status_code != 200 or response_json['status'] == 'error'):
         return public_status_messages.get('failed_authentication')
 
@@ -209,15 +210,19 @@ async def ping():
     response = requests.get(BUSINESS_BACKEND_URL + '/ping')
     return response.json()
 
-@app.post('/courses/create')
+@app.post('/courses/create_course')
 async def create_course(request: Request, current_user: dict = Depends(get_current_active_user)):
     request_json = await request.json()
     request_json['email'] = current_user["email"]
-    response = requests.post(BUSINESS_BACKEND_URL + '/create', json=request_json)
-    response = response.json()
-    if response['status'] == 'error':
-        raise HTTPException(status_code=405, detail='Could not create course')#TODO: See if status code and message are ok 
-    return response
+    response = requests.post(BUSINESS_BACKEND_URL + '/create_course', json=request_json)
+
+    if response.status_code == 200:
+        return response.json()
+    elif response.status_code == 201:
+        return public_status_messages.get("failed_create_course")#If some field is invalid or missing
+    else:
+        return public_status_messages.get("failed_insert_course")#If the course already exists
+
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
