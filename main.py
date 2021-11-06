@@ -174,14 +174,18 @@ async def sign_up(request: Request):
     response = requests.post(USERS_BACKEND_URL + '/create/', json=await request.json())
     response_json = response.json()
     if response.status_code != 200 or response_json['status'] == 'error':
-        return {'status': 'error', 'message': response_json.get('message')}
+        return public_status_messages.get('failed_sign_up')
     # Creo el token
     user = response_json['user']
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={'sub': user['email']}, expires_delta=access_token_expires
     )
-    return Token(access_token=access_token, token_type='bearer')
+    token_json = Token(access_token=access_token, token_type='bearer').dict()
+    return {
+        **response_json,
+        **token_json
+    }
 
 
 @app.get('/admin/users_count', dependencies=[Depends(authenticate_admin_token)])
