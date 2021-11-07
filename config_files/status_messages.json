@@ -1,6 +1,7 @@
 {
   "hello_api_gateway": {"status":  "ok", "message":  "Hello API gateway!"},
-  "failed_authentication": {"status":  "error", "message":  "incorrect username or password"},
   "failed_create_course": {"status":  "error", "message":  "error_bad_course"},
-  "failed_insert_course": {"status":  "error", "message":  "error_duplicate_course"}
+  "failed_insert_course": {"status":  "error", "message":  "error_duplicate_course"},
+  "failed_authentication": {"status":  "error", "message":  "error_bad_login"},
+  "failed_sign_up": {"status":  "error", "message":  "error_email_in_use"}
 }

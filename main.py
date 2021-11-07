@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 import os
-from models.login_data import Login
 
 from configuration.status_messages import public_status_messages
 from models.token_data import TokenData
@@ -51,11 +50,18 @@ def authenticate_token(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get('sub')
+        is_admin: bool = payload.get('admin')
         if username is None:
             raise credentials_exception()
-        return TokenData(username=username)
+        return TokenData(username=username, is_admin=is_admin)
     except JWTError:
         raise credentials_exception()
+
+
+def authenticate_admin_token(token_data: TokenData = Depends(authenticate_token)):
+    if not token_data.is_admin:
+        raise credentials_exception()
+    return TokenData
 
 
 def get_password_hash(password):
@@ -147,7 +153,7 @@ async def ping():
 @app.post('/login/')
 # Request: https://www.starlette.io/requests/
 async def login(request: Request):
-    #The documentation uses data instead of json but it is not updated
+    # The documentation uses data instead of json but it is not updated
     request_json = await request.json()
     response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
     response_json = response.json()
@@ -169,14 +175,23 @@ async def sign_up(request: Request):
     response = requests.post(USERS_BACKEND_URL + '/create/', json=await request.json())
     response_json = response.json()
     if response.status_code != 200 or response_json['status'] == 'error':
-        return {'status': 'error', 'message': response_json.get('message')}
+        return public_status_messages.get('failed_sign_up')
     # Creo el token
     user = response_json['user']
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={'sub': user['email']}, expires_delta=access_token_expires
     )
-    return Token(access_token=access_token, token_type='bearer')
+    token_json = Token(access_token=access_token, token_type='bearer').dict()
+    return {
+        **response_json,
+        **token_json
+    }
+
+
+@app.get('/admin/users_count', dependencies=[Depends(authenticate_admin_token)])
+async def users_count():
+    return {"status": "ok", "count": 15}
 
 
 @app.post('/admin_login')
@@ -188,7 +203,7 @@ async def admin_login(request: Request):
         return public_status_messages.get('failed_authentication')
 
     access_token_data = {
-        'sub': request_json['username'],
+        'sub': request_json['email'],
         'admin': True
     }
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
