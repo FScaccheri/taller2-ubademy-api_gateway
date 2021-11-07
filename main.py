@@ -151,7 +151,6 @@ async def login(request: Request):
     request_json = await request.json()
     response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
     response_json = response.json()
-    print(response_json)
     if (response.status_code != 200 or response_json['status'] == 'error'):
         return public_status_messages.get('failed_authentication')
 
