@@ -3,16 +3,19 @@ import requests
 
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, status, Request
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
-from jose import JWTError, jwt
+from jose import jwt, JWTError, ExpiredSignatureError
 import os
 
 from configuration.status_messages import public_status_messages
 from models.token_data import TokenData
 from models.token import Token
+
+from exceptions.expired_credentials_exception import ExpiredCredentialsException
 
 
 SECRET_KEY = '944211eb42c3b243739503a1d36225a91317cffe7d1b445add87920b380ddae5'
@@ -44,6 +47,15 @@ def credentials_exception():
     )
 
 
+@app.exception_handler(ExpiredCredentialsException)
+async def expired_credentials_exception_handler(_request: Request,
+                                                _exc: ExpiredCredentialsException):
+    return JSONResponse(
+        status_code=200,
+        content=public_status_messages.get('expired_credentials')
+    )
+
+
 def authenticate_token(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -52,6 +64,8 @@ def authenticate_token(token: str = Depends(oauth2_scheme)):
         if username is None:
             raise credentials_exception()
         return TokenData(username=username, is_admin=is_admin)
+    except ExpiredSignatureError:
+        raise ExpiredCredentialsException()
     except JWTError:
         raise credentials_exception()
 

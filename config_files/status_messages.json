@@ -1,5 +1,6 @@
 {
-  "hello_api_gateway": {"status":  "ok", "message":  "Hello API gateway!"},
-  "failed_authentication": {"status":  "error", "message":  "error_bad_login"},
-  "failed_sign_up": {"status":  "error", "message":  "error_email_in_use"}
+  "hello_api_gateway": {"status": "ok", "message": "Hello API gateway!"},
+  "failed_authentication": {"status": "error", "message": "error_bad_login"},
+  "failed_sign_up": {"status": "error", "message": "error_email_in_use"},
+  "expired_credentials": {"status":  "error", "message": "error_expired_credentials"}
 }
