@@ -4,7 +4,7 @@ import requests
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, status, Request
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
@@ -12,8 +12,8 @@ from jose import jwt, JWTError, ExpiredSignatureError
 import os
 
 from configuration.status_messages import public_status_messages
-from models.token_data import TokenData
-from models.token import Token
+from models.tokens import Token, TokenData
+from models.users import CurrentUser
 
 from exceptions.expired_credentials_exception import ExpiredCredentialsException
 
@@ -36,7 +36,7 @@ app.add_middleware(
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='login')
 
 
 def credentials_exception():
@@ -76,29 +76,6 @@ def authenticate_admin_token(token_data: TokenData = Depends(authenticate_token)
     return TokenData
 
 
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_user(username: str):
-    response = requests.get(USERS_BACKEND_URL + '/users/' + username)
-    if response.status_code == 200:
-        return response.json()
-
-
-def authenticate_user(username: str, password: str):
-    user = get_user(username)
-    if not user:
-        return False
-    if not verify_password(password, user['hashed_password']):
-        return False
-    return user
-
-
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
@@ -111,16 +88,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 
 async def get_current_user(token_data: TokenData = Depends(authenticate_token)):
-    user = get_user(username=token_data.username)
-    if user is None:
-        raise credentials_exception()
+    user = CurrentUser(email=token_data.username, is_admin=token_data.is_admin)
     return user
-
-
-async def get_current_active_user(current_user: dict = Depends(get_current_user)):
-    if current_user['disabled']:
-        raise HTTPException(status_code=400, detail='Inactive user')
-    return current_user
 
 
 # ENDPOINTS:
@@ -130,30 +99,9 @@ async def home():
     return public_status_messages.get('hello_api_gateway')
 
 
-@app.post('/token')
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=public_status_messages.get_message('failed_authentication'),
-            headers={'WWW-Authenticate': 'Bearer'}
-        )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={'sub': user['username']}, expires_delta=access_token_expires
-    )
-    return Token(access_token=access_token, token_type='bearer')
-
-
 @app.get('/users/me')
-async def read_users_me(current_user: dict = Depends(get_current_active_user)):
+async def read_users_me(current_user: dict = Depends(get_current_user)):
     return current_user
-
-
-@app.get('/users/me/items/')
-async def read_own_items(current_user: dict = Depends(get_current_active_user)):
-    return [{'item_id': 'Foo', 'owner': current_user['username']}]
 
 
 @app.get('/users/ping', dependencies=[Depends(authenticate_token)])
@@ -162,7 +110,7 @@ async def ping():
     return response.json()
 
 
-@app.post('/login/')
+@app.post('/login')
 # Request: https://www.starlette.io/requests/
 async def login(request: Request):
     # The documentation uses data instead of json but it is not updated
@@ -183,7 +131,7 @@ async def login(request: Request):
     }
 
 
-@app.post('/sign_up/')
+@app.post('/sign_up')
 async def sign_up(request: Request):
     response = requests.post(USERS_BACKEND_URL + '/create/', json=await request.json())
     response_json = response.json()
