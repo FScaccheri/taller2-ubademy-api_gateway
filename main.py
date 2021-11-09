@@ -24,6 +24,7 @@ ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL', 'http://0.0.0.0:8001')
+BUSINESS_BACKEND_URL = os.environ.get('BUSINESS_BACKEND_URL', 'http://0.0.0.0:8002')
 
 app = FastAPI()
 
@@ -178,6 +179,30 @@ async def admin_login(request: Request):
     return {
         **response.json(),
         **token_json
+    }
+
+
+@app.get('/locations')
+async def get_locations():
+    response = requests.get(BUSINESS_BACKEND_URL + '/locations')
+    response_json = response.json()
+    if (response.status_code != 200 or response_json['status'] == 'error'):
+        return public_status_messages.get('unavailable_locations')
+    return {
+        'status': 'ok',
+        'locations': response_json['locations']
+    }
+
+
+@app.get('/course_types')
+async def get_courses():
+    response = requests.get(BUSINESS_BACKEND_URL + '/course_types')
+    response_json = response.json()
+    if (response.status_code != 200 or response_json['status'] == 'error'):
+        return public_status_messages.get('unavailable_course_types')
+    return {
+        'status': 'ok',
+        'locations': response_json['course_types']
     }
 
 
