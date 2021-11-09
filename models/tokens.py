@@ -8,5 +8,5 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    username: Optional[str] = None
-    is_admin: Optional[bool] = None
+    email: str
+    is_admin: Optional[bool] = False

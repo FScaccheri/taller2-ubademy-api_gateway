@@ -59,11 +59,11 @@ async def expired_credentials_exception_handler(_request: Request,
 def authenticate_token(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get('sub')
-        is_admin: bool = payload.get('admin')
-        if username is None:
+        email: str = payload.get('sub')
+        is_admin: bool = payload.get('admin') or False
+        if email is None:
             raise credentials_exception()
-        return TokenData(username=username, is_admin=is_admin)
+        return TokenData(email=email, is_admin=is_admin)
     except ExpiredSignatureError:
         raise ExpiredCredentialsException()
     except JWTError:
@@ -88,7 +88,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 
 async def get_current_user(token_data: TokenData = Depends(authenticate_token)):
-    user = CurrentUser(email=token_data.username, is_admin=token_data.is_admin)
+    user = CurrentUser(email=token_data.email, is_admin=token_data.is_admin)
     return user
 
 
