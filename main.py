@@ -2,7 +2,7 @@ import uvicorn
 import requests
 
 from typing import Optional
-from fastapi import FastAPI, HTTPException, Depends, status, Request
+from fastapi import FastAPI, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,6 +16,7 @@ from models.tokens import Token, TokenData
 from models.users import CurrentUser
 
 from exceptions.expired_credentials_exception import ExpiredCredentialsException
+from exceptions.invalid_credentials_exception import InvalidCredentialsException
 
 
 SECRET_KEY = '944211eb42c3b243739503a1d36225a91317cffe7d1b445add87920b380ddae5'
@@ -39,11 +40,12 @@ pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='login')
 
 
-def credentials_exception():
-    return HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail='Could not validate credentials',
-        headers={'WWW-Authenticate': 'Bearer'}
+@app.exception_handler(InvalidCredentialsException)
+async def invalid_credentials_exception_handler(_request: Request,
+                                                _exc: InvalidCredentialsException):
+    return JSONResponse(
+        status_code=200,
+        content=public_status_messages.get('invalid_credentials')
     )
 
 
@@ -62,17 +64,17 @@ def authenticate_token(token: str = Depends(oauth2_scheme)):
         email: str = payload.get('sub')
         is_admin: bool = payload.get('admin') or False
         if email is None:
-            raise credentials_exception()
+            raise InvalidCredentialsException()
         return TokenData(email=email, is_admin=is_admin)
     except ExpiredSignatureError:
         raise ExpiredCredentialsException()
     except JWTError:
-        raise credentials_exception()
+        raise InvalidCredentialsException()
 
 
 def authenticate_admin_token(token_data: TokenData = Depends(authenticate_token)):
     if not token_data.is_admin:
-        raise credentials_exception()
+        raise InvalidCredentialsException()
     return TokenData
 
 
