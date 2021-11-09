@@ -3,5 +3,7 @@
   "failed_authentication": {"status": "error", "message": "error_bad_login"},
   "failed_sign_up": {"status": "error", "message": "error_email_in_use"},
   "invalid_credentials": {"status":  "error", "message": "error_invalid_credentials"},
-  "expired_credentials": {"status":  "error", "message": "error_expired_credentials"}
+  "expired_credentials": {"status":  "error", "message": "error_expired_credentials"},
+  "unavailable_locations": {"status":  "error", "message":  "error_unavailable_locations"},
+  "unavailable_course_types": {"status":  "error", "message":  "error_unavailable_course_types"}
 }
