@@ -2,6 +2,7 @@
   "hello_api_gateway": {"status": "ok", "message": "Hello API gateway!"},
   "failed_authentication": {"status": "error", "message": "error_bad_login"},
   "failed_sign_up": {"status": "error", "message": "error_email_in_use"},
+  "invalid_credentials": {"status":  "error", "message": "error_invalid_credentials"},
   "expired_credentials": {"status":  "error", "message": "error_expired_credentials"},
   "profile_update_success": {"status": "ok", "message": "updated profile successfully"},
   "profile_update_error": {"status": "error", "message": "error updating profile"}
