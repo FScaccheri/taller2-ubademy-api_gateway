@@ -196,6 +196,8 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
     response = requests.post(BUSINESS_BACKEND_URL + '/create_course', json=request_json)
     response_json = response.json()
 
+    if response.status_code != 200:
+        return public_status_messages.get("error_unexpected")
     if response_json['status'] == 'error':
         return public_status_messages.get(response_json['message'])
     
