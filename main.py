@@ -183,10 +183,10 @@ async def admin_login(request: Request):
     }
 
 
-@app.put('/profile/{profile_id}/update')
-async def udpate_profile(profile_id: int, profile_update: ProfileUpdate):
+@app.put('/update_profile')
+async def udpate_profile(profile_update: ProfileUpdate, _token=Depends(authenticate_token)):
     response = requests.put(
-        BUSINESS_BACKEND_URL + f'/profile/#{profile_id}/update',
+        BUSINESS_BACKEND_URL + '/update_profile',
         json=profile_update.dict()
     )
     response_json = response.json()
