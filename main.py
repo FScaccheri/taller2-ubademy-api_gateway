@@ -3,17 +3,20 @@ import requests
 
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, status, Request
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
-from jose import JWTError, jwt
+from jose import jwt, JWTError, ExpiredSignatureError
 import os
 
 from configuration.status_messages import public_status_messages
 from models.token_data import TokenData
 from models.token import Token
 from models.profiles import ProfileUpdate
+
+from exceptions.expired_credentials_exception import ExpiredCredentialsException
 
 
 SECRET_KEY = '944211eb42c3b243739503a1d36225a91317cffe7d1b445add87920b380ddae5'
@@ -46,6 +49,15 @@ def credentials_exception():
     )
 
 
+@app.exception_handler(ExpiredCredentialsException)
+async def expired_credentials_exception_handler(_request: Request,
+                                                _exc: ExpiredCredentialsException):
+    return JSONResponse(
+        status_code=200,
+        content=public_status_messages.get('expired_credentials')
+    )
+
+
 def authenticate_token(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -54,6 +66,8 @@ def authenticate_token(token: str = Depends(oauth2_scheme)):
         if username is None:
             raise credentials_exception()
         return TokenData(username=username, is_admin=is_admin)
+    except ExpiredSignatureError:
+        raise ExpiredCredentialsException()
     except JWTError:
         raise credentials_exception()
 
@@ -176,14 +190,18 @@ async def sign_up(request: Request):
     response = requests.post(USERS_BACKEND_URL + '/create/', json=await request.json())
     response_json = response.json()
     if response.status_code != 200 or response_json['status'] == 'error':
-        return {'status': 'error', 'message': response_json.get('message')}
+        return public_status_messages.get('failed_sign_up')
     # Creo el token
     user = response_json['user']
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={'sub': user['email']}, expires_delta=access_token_expires
     )
-    return Token(access_token=access_token, token_type='bearer')
+    token_json = Token(access_token=access_token, token_type='bearer').dict()
+    return {
+        **response_json,
+        **token_json
+    }
 
 
 @app.get('/admin/users_count', dependencies=[Depends(authenticate_admin_token)])
@@ -200,7 +218,7 @@ async def admin_login(request: Request):
         return public_status_messages.get('failed_authentication')
 
     access_token_data = {
-        'sub': request_json['username'],
+        'sub': request_json['email'],
         'admin': True
     }
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
