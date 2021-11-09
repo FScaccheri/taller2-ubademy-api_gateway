@@ -194,14 +194,12 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
     request_json = await request.json()
     request_json['email'] = current_user.email
     response = requests.post(BUSINESS_BACKEND_URL + '/create_course', json=request_json)
+    response_json = response.json()
 
-    if response.status_code == 200:
-        return response.json()
-    elif response.status_code == 201:
-        return public_status_messages.get("failed_create_course")#If some field is invalid or missing
-    else:
-        return public_status_messages.get("failed_insert_course")#If the course already exists
-
+    if response_json['status'] == 'error':
+        return public_status_messages.get(response_json['message'])
+    
+    return response_json
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
