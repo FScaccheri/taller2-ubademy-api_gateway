@@ -6,6 +6,8 @@ COPY . .
 ENV USERS_BACKEND_URL='http://backend_users:8001'
 ENV PORT=8000
 
+ENV BUSINESS_BACKEND_URL='http://backend_business:8002'
+
 EXPOSE $PORT
 
 RUN pip install -r requirements.txt
