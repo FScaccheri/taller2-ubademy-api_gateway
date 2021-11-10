@@ -189,6 +189,19 @@ async def ping():
     response = requests.get(BUSINESS_BACKEND_URL + '/ping')
     return response.json()
 
+@app.get('/courses/course', dependencies=[Depends(authenticate_token)])
+async def get_course(request: Request):
+    request_json = await request.json()
+    response = requests.get(BUSINESS_BACKEND_URL + '/course', json=request_json)
+    response_json = response.json()
+
+    if response.status_code != 200:
+        return public_status_messages.get("error_unexpected")
+    if response_json['status'] == 'error':
+        return public_status_messages.get(response_json['message'])
+    
+    return response_json
+
 @app.post('/courses/create_course')
 async def create_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()

@@ -6,5 +6,7 @@
   "expired_credentials": {"status":  "error", "message": "error_expired_credentials"},
   "failed_create_course": {"status": "error", "message": "error_bad_course_data"},
   "failed_insert_course": {"status": "error", "message": "error_duplicate_course"},
+  "course_not_found": {"status": "error", "message": "error_inexistent_course"},
+  "invalid_course_id": {"status": "error", "message": "error_invalid_course_id"},
   "error_unexpected": {"status": "error", "message": "error_unexpected"}
 }
