@@ -6,5 +6,7 @@
   "expired_credentials": {"status":  "error", "message": "error_expired_credentials"},
   "failed_create_course": {"status": "error", "message": "error_bad_course_data"},
   "failed_insert_course": {"status": "error", "message": "error_duplicate_course"},
-  "error_unexpected": {"status": "error", "message": "error_unexpected"}
+  "error_unexpected": {"status": "error", "message": "error_unexpected"},
+  "profile_update_success": {"status": "ok", "message": "updated profile successfully"},
+  "profile_update_error": {"status": "error", "message": "error updating profile"}
 }

@@ -109,7 +109,7 @@ async def read_users_me(current_user: dict = Depends(get_current_user)):
 
 
 @app.get('/users/ping', dependencies=[Depends(authenticate_token)])
-async def ping():
+async def users_ping():
     response = requests.get(USERS_BACKEND_URL + '/pong')
     return response.json()
 
@@ -184,10 +184,12 @@ async def admin_login(request: Request):
 
 # BUSINESS BACKEND
 
+
 @app.get('/courses/ping')
 async def ping():
     response = requests.get(BUSINESS_BACKEND_URL + '/ping')
     return response.json()
+
 
 @app.post('/courses/create_course')
 async def create_course(request: Request, current_user: dict = Depends(get_current_user)):
@@ -200,8 +202,21 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
         return public_status_messages.get("error_unexpected")
     if response_json['status'] == 'error':
         return public_status_messages.get(response_json['message'])
-    
     return response_json
+
+
+@app.put('/update_profile')
+async def udpate_profile(request: Request, _token=Depends(authenticate_token)):
+    request_json = await request.json()
+    response = requests.put(
+        BUSINESS_BACKEND_URL + '/update_profile',
+        json=request_json
+    )
+    response_json = response.json()
+    if (response.status_code != 200 or response_json['status'] == 'error'):
+        return public_status_messages.get('profile_update_error')
+    return public_status_messages.get('profile_update_success')
+
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
