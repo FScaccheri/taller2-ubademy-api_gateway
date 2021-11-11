@@ -203,5 +203,26 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
     
     return response_json
 
+
+@app.get('/profile_setup')
+async def profile_setup():
+    genres_response = None
+    countries_response = requests.get(BUSINESS_BACKEND_URL + '/countries').json()
+
+    if countries_response["status"] != "error":
+        genres_response = requests.get(BUSINESS_BACKEND_URL + '/course_genres').json()
+        if genres_response["status"] != "error":
+            return {
+                **public_status_messages.get("data_delivered"),
+                "locations": countries_response["locations"],
+                "types": genres_response["types"]
+            }
+
+    # TODO: MANEJAR BIEN LOS DISTINTOS CASOS DE ERRORES PARA LOS DISTINTOS GET
+    return public_status_messages.get("error_unexpected")
+
+
+
+
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
