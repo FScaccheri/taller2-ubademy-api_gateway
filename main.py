@@ -141,6 +141,14 @@ async def sign_up(request: Request):
     response_json = response.json()
     if response.status_code != 200 or response_json['status'] == 'error':
         return public_status_messages.get('failed_sign_up')
+    # Creo el perfil
+    profile_json = {
+        'email': response_json['email'],
+        'name': response_json['name'],
+    }
+    profile_response = requests.post(BUSINESS_BACKEND_URL + '/create_profile', json=profile_json)
+    if profile_response != 200 or profile_response['status'] == 'error':
+        return public_status_messages.get('profile_creation_error')
     # Creo el token
     user = response_json['user']
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
