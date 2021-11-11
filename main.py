@@ -27,6 +27,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL', 'http://0.0.0.0:8001')
 BUSINESS_BACKEND_URL = os.environ.get('BUSINESS_BACKEND_URL', 'http://0.0.0.0:8002')
 
+
 app = FastAPI()
 
 app.add_middleware(
@@ -109,7 +110,7 @@ async def read_users_me(current_user: dict = Depends(get_current_user)):
 
 
 @app.get('/users/ping', dependencies=[Depends(authenticate_token)])
-async def ping():
+async def users_ping():
     response = requests.get(USERS_BACKEND_URL + '/pong')
     return response.json()
 
@@ -181,6 +182,28 @@ async def admin_login(request: Request):
         **response.json(),
         **token_json
     }
+
+# BUSINESS BACKEND
+
+
+@app.get('/courses/ping')
+async def ping():
+    response = requests.get(BUSINESS_BACKEND_URL + '/ping')
+    return response.json()
+
+
+@app.post('/courses/create_course')
+async def create_course(request: Request, current_user: dict = Depends(get_current_user)):
+    request_json = await request.json()
+    request_json['email'] = current_user.email
+    response = requests.post(BUSINESS_BACKEND_URL + '/create_course', json=request_json)
+    response_json = response.json()
+
+    if response.status_code != 200:
+        return public_status_messages.get("error_unexpected")
+    if response_json['status'] == 'error':
+        return public_status_messages.get(response_json['message'])
+    return response_json
 
 
 @app.put('/update_profile')
