@@ -208,14 +208,13 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
 async def profile_setup():
     genres_response = None
     countries_response = requests.get(BUSINESS_BACKEND_URL + '/countries').json()
-
     if countries_response["status"] != "error":
         genres_response = requests.get(BUSINESS_BACKEND_URL + '/course_genres').json()
         if genres_response["status"] != "error":
             return {
                 **public_status_messages.get("data_delivered"),
                 "locations": countries_response["locations"],
-                "types": genres_response["types"]
+                "course_genres": genres_response["course_genres"]
             }
 
     # TODO: MANEJAR BIEN LOS DISTINTOS CASOS DE ERRORES PARA LOS DISTINTOS GET
