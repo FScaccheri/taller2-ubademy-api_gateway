@@ -14,7 +14,6 @@ import os
 from configuration.status_messages import public_status_messages
 from models.tokens import Token, TokenData
 from models.users import CurrentUser
-from models.profiles import ProfileUpdate
 
 from exceptions.expired_credentials_exception import ExpiredCredentialsException
 from exceptions.invalid_credentials_exception import InvalidCredentialsException
@@ -207,10 +206,11 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
 
 
 @app.put('/update_profile')
-async def udpate_profile(profile_update: ProfileUpdate, _token=Depends(authenticate_token)):
+async def udpate_profile(request: Request, _token=Depends(authenticate_token)):
+    request_json = await request.json()
     response = requests.put(
         BUSINESS_BACKEND_URL + '/update_profile',
-        json=profile_update.dict()
+        json=request_json
     )
     response_json = response.json()
     if (response.status_code != 200 or response_json['status'] == 'error'):
