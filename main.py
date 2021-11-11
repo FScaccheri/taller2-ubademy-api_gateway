@@ -182,11 +182,22 @@ async def admin_login(request: Request):
         **token_json
     }
 
+
+@app.post('/admin_register')
+async def admin_register(request: Request, _token=Depends(authenticate_admin_token)):
+    response = requests.post(USERS_BACKEND_URL + '/admin_create/', json=await request.json())
+    response_json = response.json()
+    if response.status_code != 200 or response_json['status'] == 'error':
+        return public_status_messages.get('failed_sign_up')
+    return {
+        **response_json
+    }
+
 # BUSINESS BACKEND
 
 
 @app.get('/courses/ping')
-async def ping():
+async def business_ping():
     response = requests.get(BUSINESS_BACKEND_URL + '/ping')
     return response.json()
 
