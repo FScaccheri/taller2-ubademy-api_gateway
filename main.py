@@ -109,7 +109,7 @@ async def read_users_me(current_user: dict = Depends(get_current_user)):
 
 
 @app.get('/users/ping', dependencies=[Depends(authenticate_token)])
-async def ping():
+async def users_ping():
     response = requests.get(USERS_BACKEND_URL + '/pong')
     return response.json()
 
@@ -184,10 +184,12 @@ async def admin_login(request: Request):
 
 # BUSINESS BACKEND
 
+
 @app.get('/courses/ping')
 async def ping():
     response = requests.get(BUSINESS_BACKEND_URL + '/ping')
     return response.json()
+
 
 @app.post('/courses/create_course')
 async def create_course(request: Request, current_user: dict = Depends(get_current_user)):
@@ -200,27 +202,26 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
         return public_status_messages.get("error_unexpected")
     if response_json['status'] == 'error':
         return public_status_messages.get(response_json['message'])
-    
+
     return response_json
 
 
 @app.get('/profile_setup')
 async def profile_setup():
-    genres_response = None
-    countries_response = requests.get(BUSINESS_BACKEND_URL + '/countries').json()
-    if countries_response["status"] != "error":
-        genres_response = requests.get(BUSINESS_BACKEND_URL + '/course_genres').json()
-        if genres_response["status"] != "error":
-            return {
-                **public_status_messages.get("data_delivered"),
-                "locations": countries_response["locations"],
-                "course_genres": genres_response["course_genres"]
-            }
+    countries_response = requests.get(BUSINESS_BACKEND_URL + '/countries')
+    genres_response = requests.get(BUSINESS_BACKEND_URL + '/course_genres')
 
-    # TODO: MANEJAR BIEN LOS DISTINTOS CASOS DE ERRORES PARA LOS DISTINTOS GET
-    return public_status_messages.get("error_unexpected")
-
-
+    if countries_response.status_code != 200 or genres_response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    if countries_response['status'] == 'error':
+        return public_status_messages.get('unavailable_countries')
+    if genres_response['status'] == 'error':
+        return public_status_messages.get('unavailable_genres')
+    return {
+        **public_status_messages.get('data_delivered'),
+        'locations': countries_response['locations'],
+        'course_genres': genres_response['course_genres']
+    }
 
 
 if __name__ == '__main__':

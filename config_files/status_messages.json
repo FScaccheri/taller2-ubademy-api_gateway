@@ -7,5 +7,7 @@
   "failed_create_course": {"status": "error", "message": "error_bad_course_data"},
   "failed_insert_course": {"status": "error", "message": "error_duplicate_course"},
   "error_unexpected": {"status": "error", "message": "error_unexpected"},
-  "data_delivered": {"status": "ok", "message": "data retrieved"}
+  "data_delivered": {"status": "ok", "message": "data retrieved"},
+  "unavailable_countries": {"status":  "error", "message":  "error_unavailable_locations"},
+  "unavailable_genres": {"status":  "error", "message":  "error_unavailable_course_types"}
 }
