@@ -8,5 +8,6 @@
   "failed_insert_course": {"status": "error", "message": "error_duplicate_course"},
   "error_unexpected": {"status": "error", "message": "error_unexpected"},
   "profile_update_success": {"status": "ok", "message": "updated profile successfully"},
-  "profile_update_error": {"status": "error", "message": "error updating profile"}
+  "profile_update_error": {"status": "error", "message": "error updating profile"},
+  "profile_get_error": {"status": "error", "message": "error_profile_not_found"}
 }
