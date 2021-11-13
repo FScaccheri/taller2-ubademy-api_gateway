@@ -109,7 +109,7 @@ async def read_users_me(current_user: dict = Depends(get_current_user)):
 
 
 @app.get('/users/ping', dependencies=[Depends(authenticate_token)])
-async def ping():
+async def users_ping():
     response = requests.get(USERS_BACKEND_URL + '/pong')
     return response.json()
 
@@ -141,6 +141,14 @@ async def sign_up(request: Request):
     response_json = response.json()
     if response.status_code != 200 or response_json['status'] == 'error':
         return public_status_messages.get('failed_sign_up')
+    # Creo el perfil
+    profile_json = {
+        'email': response_json['email'],
+        'name': response_json['name'],
+    }
+    profile_response = requests.post(BUSINESS_BACKEND_URL + '/create_profile', json=profile_json)
+    if profile_response != 200 or profile_response['status'] == 'error':
+        return public_status_messages.get('profile_creation_error')
     # Creo el token
     user = response_json['user']
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -182,10 +190,22 @@ async def admin_login(request: Request):
         **token_json
     }
 
+
+@app.post('/admin_register')
+async def admin_register(request: Request, _token=Depends(authenticate_admin_token)):
+    response = requests.post(USERS_BACKEND_URL + '/admin_create/', json=await request.json())
+    response_json = response.json()
+    if response.status_code != 200 or response_json['status'] == 'error':
+        return public_status_messages.get('failed_sign_up')
+    return {
+        **response_json
+    }
+
 # BUSINESS BACKEND
 
+
 @app.get('/courses/ping')
-async def ping():
+async def business_ping():
     response = requests.get(BUSINESS_BACKEND_URL + '/ping')
     return response.json()
 
@@ -213,8 +233,64 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
         return public_status_messages.get("error_unexpected")
     if response_json['status'] == 'error':
         return public_status_messages.get(response_json['message'])
-    
     return response_json
+
+
+@app.put('/courses/update_course')
+async def update_course(request: Request, current_user: dict = Depends(get_current_user)):
+    request_json = await request.json()
+    request_json['email'] = current_user.email
+    response = requests.put(BUSINESS_BACKEND_URL + '/update_course', json=request_json)
+    response_json = response.json()
+
+    if response.status_code != 200 or response_json['status'] == 'error':
+        return public_status_messages.get('failed_update_course')
+    return response_json
+
+
+@app.get('/profile_setup')
+async def profile_setup():
+    countries_response = requests.get(BUSINESS_BACKEND_URL + '/countries')
+    genres_response = requests.get(BUSINESS_BACKEND_URL + '/course_genres')
+
+    if countries_response.status_code != 200 or genres_response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    if countries_response['status'] == 'error':
+        return public_status_messages.get('unavailable_countries')
+    if genres_response['status'] == 'error':
+        return public_status_messages.get('unavailable_genres')
+    return {
+        **public_status_messages.get('data_delivered'),
+        'locations': countries_response['locations'],
+        'course_genres': genres_response['course_genres']
+    }
+
+
+@app.put('/update_profile')
+async def udpate_profile(request: Request, _token=Depends(authenticate_token)):
+    request_json = await request.json()
+    response = requests.put(
+        BUSINESS_BACKEND_URL + '/update_profile',
+        json=request_json
+    )
+    response_json = response.json()
+    if response.status_code != 200 or response_json['status'] == 'error':
+        return public_status_messages.get('profile_update_error')
+    return public_status_messages.get('profile_update_success')
+
+
+@app.get('/profile/{profile_email}')
+async def get_profile(profile_email: str, token_data=Depends(authenticate_token)):
+    privilege: str = 'admin' if token_data.is_admin else 'user'
+    response = requests.get(
+        BUSINESS_BACKEND_URL + f"/profile/{token_data.email}/{privilege}/{profile_email}"
+    )
+
+    if response.status_code != 200 or response['status'] == 'error':
+        return public_status_messages.get('profile_get_error')
+
+    return response
+
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))

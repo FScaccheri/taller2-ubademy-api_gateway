@@ -8,5 +8,13 @@
   "failed_insert_course": {"status": "error", "message": "error_duplicate_course"},
   "course_not_found": {"status": "error", "message": "error_inexistent_course"},
   "invalid_course_id": {"status": "error", "message": "error_invalid_course_id"},
-  "error_unexpected": {"status": "error", "message": "error_unexpected"}
+  "failed_update_course": {"status": "error", "message": "error_course_update"},
+  "error_unexpected": {"status": "error", "message": "error_unexpected"},
+  "profile_creation_error": {"status":  "error", "message": "error_profile_create"},
+  "profile_update_success": {"status": "ok", "message": "updated profile successfully"},
+  "profile_update_error": {"status": "error", "message": "error updating profile"},
+  "data_delivered": {"status": "ok", "message": "data retrieved"},
+  "unavailable_countries": {"status":  "error", "message":  "error_unavailable_locations"},
+  "unavailable_genres": {"status":  "error", "message":  "error_unavailable_course_types"},
+  "profile_get_error": {"status": "error", "message": "error_profile_not_found"}
 }
