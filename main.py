@@ -209,16 +209,14 @@ async def business_ping():
     response = requests.get(BUSINESS_BACKEND_URL + '/ping')
     return response.json()
 
-@app.get('/courses/course', dependencies=[Depends(authenticate_token)])
-async def get_course(request: Request):
-    request_json = await request.json()
-    response = requests.get(BUSINESS_BACKEND_URL + '/course', json=request_json)
+@app.get('/courses/{course_id}', dependencies=[Depends(authenticate_token)])
+async def get_course(request: Request, course_id: str):
+    response = requests.get(BUSINESS_BACKEND_URL + f"/course/{course_id}")
     response_json = response.json()
 
-    if response.status_code != 200:
-        return public_status_messages.get("error_unexpected")
-    if response_json['status'] == 'error':
-        return public_status_messages.get(response_json['message'])
+    #TODO: Respond with different error messages
+    if response.status_code != 200 or response_json['status'] == 'error':
+        return public_status_messages.get('course_not_found')
     
     return response_json
 
