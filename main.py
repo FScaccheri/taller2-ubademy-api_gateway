@@ -267,5 +267,18 @@ async def udpate_profile(request: Request, _token=Depends(authenticate_token)):
     return public_status_messages.get('profile_update_success')
 
 
+@app.get('/profile/{profile_email}')
+async def get_profile(profile_email: str, token_data=Depends(authenticate_token)):
+    privilege: str = 'admin' if token_data.is_admin else 'user'
+    response = requests.get(
+        BUSINESS_BACKEND_URL + f"/profile/{token_data.email}/{privilege}/{profile_email}"
+    )
+
+    if response.status_code != 200 or response['status'] == 'error':
+        return public_status_messages.get('profile_get_error')
+
+    return response
+
+
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
