@@ -257,8 +257,9 @@ async def udpate_profile(request: Request, _token=Depends(authenticate_token)):
 
 @app.get('/profile/{profile_email}')
 async def get_profile(profile_email: str, token_data=Depends(authenticate_token)):
+    privilege: str = 'admin' if token_data.is_admin else 'user'
     response = requests.get(
-        BUSINESS_BACKEND_URL + f"/profile/{token_data.email}/{token_data.is_admin}/{profile_email}"
+        BUSINESS_BACKEND_URL + f"/profile/{token_data.email}/{privilege}/{profile_email}"
     )
 
     if response.status_code != 200 or response['status'] == 'error':
