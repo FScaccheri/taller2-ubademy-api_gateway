@@ -224,6 +224,18 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
     return response_json
 
 
+@app.put('/courses/update_course')
+async def update_course(request: Request, current_user: dict = Depends(get_current_user)):
+    request_json = await request.json()
+    request_json['email'] = current_user.email
+    response = requests.put(BUSINESS_BACKEND_URL + '/update_course', json=request_json)
+    response_json = response.json()
+
+    if response.status_code != 200 or response_json['status'] == 'error':
+        return public_status_messages.get('failed_update_course')
+    return response_json
+
+
 @app.get('/profile_setup')
 async def profile_setup():
     countries_response = requests.get(BUSINESS_BACKEND_URL + '/countries')
