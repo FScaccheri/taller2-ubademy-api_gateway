@@ -260,16 +260,18 @@ async def profile_setup():
     countries_response = requests.get(BUSINESS_BACKEND_URL + '/countries')
     genres_response = requests.get(BUSINESS_BACKEND_URL + '/course_genres')
 
+    countries_response_json = countries_response.json()
+    genres_response_json = genres_response.json()
     if countries_response.status_code != 200 or genres_response.status_code != 200:
         return public_status_messages.get('error_unexpected')
-    if countries_response['status'] == 'error':
+    if countries_response_json['status'] == 'error':
         return public_status_messages.get('unavailable_countries')
-    if genres_response['status'] == 'error':
+    if genres_response_json['status'] == 'error':
         return public_status_messages.get('unavailable_genres')
     return {
         **public_status_messages.get('data_delivered'),
-        'locations': countries_response['locations'],
-        'course_genres': genres_response['course_genres']
+        'locations': countries_response_json['locations'],
+        'course_genres': genres_response_json['course_genres']
     }
 
 
