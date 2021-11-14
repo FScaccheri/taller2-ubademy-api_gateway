@@ -236,6 +236,18 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
     return response_json
 
 
+@app.put('/courses/update_course')
+async def update_course(request: Request, current_user: dict = Depends(get_current_user)):
+    request_json = await request.json()
+    request_json['email'] = current_user.email
+    response = requests.put(BUSINESS_BACKEND_URL + '/update_course', json=request_json)
+    response_json = response.json()
+
+    if response.status_code != 200 or response_json['status'] == 'error':
+        return public_status_messages.get('failed_update_course')
+    return response_json
+
+
 @app.get('/profile_setup')
 async def profile_setup():
     countries_response = requests.get(BUSINESS_BACKEND_URL + '/countries')
@@ -265,6 +277,19 @@ async def udpate_profile(request: Request, _token=Depends(authenticate_token)):
     if response.status_code != 200 or response_json['status'] == 'error':
         return public_status_messages.get('profile_update_error')
     return public_status_messages.get('profile_update_success')
+
+
+@app.get('/profile/{profile_email}')
+async def get_profile(profile_email: str, token_data=Depends(authenticate_token)):
+    privilege: str = 'admin' if token_data.is_admin else 'user'
+    response = requests.get(
+        BUSINESS_BACKEND_URL + f"/profile/{token_data.email}/{privilege}/{profile_email}"
+    )
+
+    if response.status_code != 200 or response['status'] == 'error':
+        return public_status_messages.get('profile_get_error')
+
+    return response
 
 
 if __name__ == '__main__':
