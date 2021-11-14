@@ -254,8 +254,10 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
     response = requests.put(BUSINESS_BACKEND_URL + '/update_course', json=request_json)
     response_json = response.json()
 
-    if response.status_code != 200 or response_json['status'] == 'error':
-        return public_status_messages.get('failed_update_course')
+    if response.status_code != 200:
+        return public_status_messages.get("error_unexpected")
+    if response_json['status'] == 'error':
+        return public_status_messages.get(response_json['message'])
     return response_json
 
 
