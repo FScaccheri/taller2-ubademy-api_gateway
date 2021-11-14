@@ -139,8 +139,10 @@ async def login(request: Request):
 async def sign_up(request: Request):
     response = requests.post(USERS_BACKEND_URL + '/create/', json=await request.json())
     response_json = response.json()
-    if response.status_code != 200 or response_json['status'] == 'error':
-        return public_status_messages.get('failed_sign_up')
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    if response_json['status'] == 'error':
+        return response_json
     # Creo el perfil
     profile_json = {
         'email': response_json['email'],
@@ -148,8 +150,10 @@ async def sign_up(request: Request):
     }
     profile_response = requests.post(BUSINESS_BACKEND_URL + '/create_profile', json=profile_json)
     profile_response_json = profile_response.json()
-    if profile_response.status_code != 200 or profile_response_json['status'] == 'error':
-        # TODO: ELIMINAR EL PERFIL EN USERS SI FALLO LA CREACION DEL PERFIL
+    # TODO: ELIMINAR EL PERFIL EN USERS SI FALLO LA CREACION DEL PERFIL
+    if profile_response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    if profile_response_json['status'] == 'error':
         return public_status_messages.get('profile_creation_error')
     # Creo el token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -199,8 +203,10 @@ async def admin_login(request: Request):
 async def admin_register(request: Request, _token=Depends(authenticate_admin_token)):
     response = requests.post(USERS_BACKEND_URL + '/admin_create/', json=await request.json())
     response_json = response.json()
-    if response.status_code != 200 or response_json['status'] == 'error':
-        return public_status_messages.get('failed_sign_up')
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    if response_json['status'] == 'error':
+        return response_json
     return {
         **response_json
     }
