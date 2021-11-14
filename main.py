@@ -295,8 +295,8 @@ async def get_profile(profile_email: str, token_data=Depends(authenticate_token)
     response = requests.get(
         BUSINESS_BACKEND_URL + f"/profile/{token_data.email}/{privilege}/{profile_email}"
     )
-
-    if response.status_code != 200 or response['status'] == 'error':
+    response_json = response.json()
+    if response.status_code != 200 or response_json['status'] == 'error':
         return public_status_messages.get('profile_get_error')
 
     return response
