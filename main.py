@@ -214,10 +214,10 @@ async def get_course(request: Request, course_id: str):
     response = requests.get(BUSINESS_BACKEND_URL + f"/course/{course_id}")
     response_json = response.json()
 
-    #TODO: Respond with different error messages
-    if response.status_code != 200 or response_json['status'] == 'error':
-        return public_status_messages.get('course_not_found')
-    
+    if response.status_code != 200:
+        return public_status_messages.get("error_unexpected")
+    if response_json['status'] == 'error':
+        return public_status_messages.get(response_json['message'])
     return response_json
 
 @app.post('/courses/create_course')
