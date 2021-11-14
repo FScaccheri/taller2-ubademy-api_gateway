@@ -154,7 +154,7 @@ async def sign_up(request: Request):
     if profile_response.status_code != 200:
         return public_status_messages.get('error_unexpected')
     if profile_response_json['status'] == 'error':
-        return public_status_messages.get('profile_creation_error')
+        return profile_response_json
     # Creo el token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
