@@ -286,6 +286,31 @@ async def profile_setup():
         'course_genres': genres_response_json['course_genres']
     }
 
+@app.get('/course_setup')
+async def course_setup():
+    #TODO: A lot of repeated code from profile_setup
+    countries_response = requests.get(BUSINESS_BACKEND_URL + '/countries')
+    genres_response = requests.get(BUSINESS_BACKEND_URL + '/course_genres')
+    subscriptions_response = requests.get(BUSINESS_BACKEND_URL + '/subscription_types')
+
+    countries_response_json = countries_response.json()
+    genres_response_json = genres_response.json()
+    subscriptions_response_json = subscriptions_response.json()
+    if countries_response.status_code != 200 or genres_response.status_code != 200 or subscriptions_response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    if countries_response_json['status'] == 'error':
+        return public_status_messages.get('unavailable_countries')
+    if genres_response_json['status'] == 'error':
+        return public_status_messages.get('unavailable_genres')
+    if subscriptions_response_json['status'] == 'error':
+        return public_status_messages.get('unavailable_subscriptions')
+    return {
+        **public_status_messages.get('data_delivered'),
+        'locations': countries_response_json['locations'],
+        'course_genres': genres_response_json['course_genres'],
+        'subscriptions': subscriptions_response_json['types']
+    }
+
 
 @app.put('/update_profile')
 async def udpate_profile(request: Request, _token=Depends(authenticate_token)):
