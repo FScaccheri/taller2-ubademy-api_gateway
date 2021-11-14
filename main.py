@@ -278,7 +278,7 @@ async def profile_setup():
 @app.put('/update_profile')
 async def udpate_profile(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
-    request_json['email'] = current_user['email']
+    request_json['email'] = current_user.email
     response = requests.post(
         BUSINESS_BACKEND_URL + '/update_profile',
         json=request_json
