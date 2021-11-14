@@ -147,19 +147,23 @@ async def sign_up(request: Request):
         'name': response_json['name'],
     }
     profile_response = requests.post(BUSINESS_BACKEND_URL + '/create_profile', json=profile_json)
-    if profile_response != 200 or profile_response['status'] == 'error':
+    profile_response_json = profile_response.json()
+    if profile_response.status_code != 200 or profile_response_json['status'] == 'error':
+        # TODO: ELIMINAR EL PERFIL EN USERS SI FALLO LA CREACION DEL PERFIL
         return public_status_messages.get('profile_creation_error')
     # Creo el token
-    user = response_json['user']
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={'sub': user['email']}, expires_delta=access_token_expires
+        data={'sub': response_json['email']}, expires_delta=access_token_expires
     )
     token_json = Token(access_token=access_token, token_type='bearer').dict()
     return {
         **response_json,
         **token_json
     }
+
+
+# BACKOFFICE ENDPOINTS
 
 
 @app.get('/admin/users_count', dependencies=[Depends(authenticate_admin_token)])
@@ -200,6 +204,15 @@ async def admin_register(request: Request, _token=Depends(authenticate_admin_tok
     return {
         **response_json
     }
+
+
+@app.get('/get_all_users')
+async def get_all_users(_token=Depends(authenticate_admin_token)):
+    response = requests.get(USERS_BACKEND_URL + '/users_list')
+    response_json = response.json()
+    if response.status_code != 200 or response_json['status'] == 'error':
+        return public_status_messages.get('users_list_error')
+    return response_json
 
 # BUSINESS BACKEND
 
