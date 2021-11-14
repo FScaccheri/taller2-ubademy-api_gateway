@@ -162,6 +162,9 @@ async def sign_up(request: Request):
     }
 
 
+# BACKOFFICE ENDPOINTS
+
+
 @app.get('/admin/users_count', dependencies=[Depends(authenticate_admin_token)])
 async def users_count():
     return {"status": "ok", "count": 15}
@@ -200,6 +203,15 @@ async def admin_register(request: Request, _token=Depends(authenticate_admin_tok
     return {
         **response_json
     }
+
+
+@app.get('/get_all_users')
+async def get_all_users(_token=Depends(authenticate_admin_token)):
+    response = requests.get(USERS_BACKEND_URL + '/users_list')
+    response_json = response.json()
+    if response.status_code != 200 or response_json['status'] == 'error':
+        return public_status_messages.get('users_list_error')
+    return response_json
 
 # BUSINESS BACKEND
 

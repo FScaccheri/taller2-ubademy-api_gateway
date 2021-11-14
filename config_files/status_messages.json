@@ -14,5 +14,6 @@
   "data_delivered": {"status": "ok", "message": "data retrieved"},
   "unavailable_countries": {"status":  "error", "message":  "error_unavailable_locations"},
   "unavailable_genres": {"status":  "error", "message":  "error_unavailable_course_types"},
+  "users_list_error": {"status": "error", "message": "error_users_list"},
   "profile_get_error": {"status": "error", "message": "error_profile_not_found"}
 }
