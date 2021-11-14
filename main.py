@@ -299,7 +299,7 @@ async def get_profile(profile_email: str, token_data=Depends(authenticate_token)
     if response.status_code != 200 or response_json['status'] == 'error':
         return public_status_messages.get('profile_get_error')
 
-    return response
+    return response_json
 
 
 if __name__ == '__main__':
