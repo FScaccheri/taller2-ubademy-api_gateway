@@ -313,9 +313,10 @@ async def course_setup():
 
 
 @app.put('/update_profile')
-async def udpate_profile(request: Request, _token=Depends(authenticate_token)):
+async def udpate_profile(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
-    response = requests.put(
+    request_json['email'] = current_user.email
+    response = requests.post(
         BUSINESS_BACKEND_URL + '/update_profile',
         json=request_json
     )
@@ -331,11 +332,11 @@ async def get_profile(profile_email: str, token_data=Depends(authenticate_token)
     response = requests.get(
         BUSINESS_BACKEND_URL + f"/profile/{token_data.email}/{privilege}/{profile_email}"
     )
-
-    if response.status_code != 200 or response['status'] == 'error':
+    response_json = response.json()
+    if response.status_code != 200 or response_json['status'] == 'error':
         return public_status_messages.get('profile_get_error')
 
-    return response
+    return response_json
 
 
 if __name__ == '__main__':
