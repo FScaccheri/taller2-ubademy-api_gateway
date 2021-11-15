@@ -308,7 +308,7 @@ async def course_setup():
         **public_status_messages.get('data_delivered'),
         'locations': countries_response_json['locations'],
         'course_genres': genres_response_json['course_genres'],
-        'subscriptions': subscriptions_response_json['types']
+        'subscriptions': subscriptions_response_json['types'].keys()
     }
 
 
