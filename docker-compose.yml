@@ -17,6 +17,7 @@ services:
       - "8002"
     volumes:
       - ./../taller2-ubademy-business:/app 
+      - /app/node_modules
 
   backend_api_gateway:
     build: .
