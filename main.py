@@ -84,9 +84,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({'exp': expire})
+        to_encode.update({'exp': expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -121,10 +119,11 @@ async def login(request: Request):
     request_json = await request.json()
     response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
     response_json = response.json()
-    if (response.status_code != 200 or response_json['status'] == 'error'):
+    if response.status_code != 200 or response_json['status'] == 'error':
         return public_status_messages.get('failed_authentication')
 
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    is_biometric = request_json.get('biometric', None)
+    access_token_expires = None if is_biometric else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={'sub': request_json['email']}, expires_delta=access_token_expires
     )
@@ -228,6 +227,7 @@ async def business_ping():
     response = requests.get(BUSINESS_BACKEND_URL + '/ping')
     return response.json()
 
+
 @app.get('/courses/{course_id}', dependencies=[Depends(authenticate_token)])
 async def get_course(request: Request, course_id: str):
     response = requests.get(BUSINESS_BACKEND_URL + f"/course/{course_id}")
@@ -238,6 +238,7 @@ async def get_course(request: Request, course_id: str):
     if response_json['status'] == 'error':
         return public_status_messages.get(response_json['message'])
     return response_json
+
 
 @app.post('/courses/create_course')
 async def create_course(request: Request, current_user: dict = Depends(get_current_user)):
@@ -286,9 +287,10 @@ async def profile_setup():
         'course_genres': genres_response_json['course_genres']
     }
 
+
 @app.get('/course_setup')
 async def course_setup():
-    #TODO: A lot of repeated code from profile_setup
+    # TODO: A lot of repeated code from profile_setup
     countries_response = requests.get(BUSINESS_BACKEND_URL + '/countries')
     genres_response = requests.get(BUSINESS_BACKEND_URL + '/course_genres')
     subscriptions_response = requests.get(BUSINESS_BACKEND_URL + '/subscription_types')
@@ -296,7 +298,9 @@ async def course_setup():
     countries_response_json = countries_response.json()
     genres_response_json = genres_response.json()
     subscriptions_response_json = subscriptions_response.json()
-    if countries_response.status_code != 200 or genres_response.status_code != 200 or subscriptions_response.status_code != 200:
+    if countries_response.status_code != 200 \
+       or genres_response.status_code != 200 \
+       or subscriptions_response.status_code != 200:
         return public_status_messages.get('error_unexpected')
     if countries_response_json['status'] == 'error':
         return public_status_messages.get('unavailable_countries')
