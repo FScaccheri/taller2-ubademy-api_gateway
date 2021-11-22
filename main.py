@@ -268,6 +268,15 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
     return response_json
 
 
+@app.get('/search_courses/{filter_type}/{filter_value}')
+async def search_courses(filter_type: str, filter_value: str):
+    response = requests.get(BUSINESS_BACKEND_URL +
+                            f'/organized_courses/{filter_type}/{filter_value}')
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    return response.json()
+
+
 @app.get('/profile_setup')
 async def profile_setup():
     countries_response = requests.get(BUSINESS_BACKEND_URL + '/countries')
