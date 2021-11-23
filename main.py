@@ -26,6 +26,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL', 'http://0.0.0.0:8001')
 BUSINESS_BACKEND_URL = os.environ.get('BUSINESS_BACKEND_URL', 'http://0.0.0.0:8002')
 
+COURSES_PREFIX = '/courses'
+PROFILES_PREFIX = '/profiles'
 
 app = FastAPI()
 
@@ -147,7 +149,7 @@ async def sign_up(request: Request):
         'email': response_json['email'],
         'name': response_json['name'],
     }
-    profile_response = requests.post(BUSINESS_BACKEND_URL + '/create_profile', json=profile_json)
+    profile_response = requests.post(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create_profile', json=profile_json)
     profile_response_json = profile_response.json()
     # TODO: ELIMINAR EL PERFIL EN USERS SI FALLO LA CREACION DEL PERFIL
     if profile_response.status_code != 200:
@@ -230,7 +232,7 @@ async def business_ping():
 
 @app.get('/courses/{course_id}', dependencies=[Depends(authenticate_token)])
 async def get_course(request: Request, course_id: str):
-    response = requests.get(BUSINESS_BACKEND_URL + f"/course/{course_id}")
+    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f"/course/{course_id}")
     response_json = response.json()
 
     if response.status_code != 200:
@@ -244,7 +246,7 @@ async def get_course(request: Request, course_id: str):
 async def create_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['email'] = current_user.email
-    response = requests.post(BUSINESS_BACKEND_URL + '/create_course', json=request_json)
+    response = requests.post(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create_course', json=request_json)
     response_json = response.json()
 
     if response.status_code != 200:
@@ -258,7 +260,7 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
 async def update_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['email'] = current_user.email
-    response = requests.put(BUSINESS_BACKEND_URL + '/update_course', json=request_json)
+    response = requests.put(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/update_course', json=request_json)
     response_json = response.json()
 
     if response.status_code != 200:
@@ -270,8 +272,7 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
 
 @app.get('/search_courses/{filter_type}/{filter_value}')
 async def search_courses(filter_type: str, filter_value: str):
-    response = requests.get(BUSINESS_BACKEND_URL +
-                            f'/organized_courses/{filter_type}/{filter_value}')
+    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized_courses/{filter_type}/{filter_value}')
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
     return response.json()
@@ -279,8 +280,8 @@ async def search_courses(filter_type: str, filter_value: str):
 
 @app.get('/profile_setup')
 async def profile_setup():
-    countries_response = requests.get(BUSINESS_BACKEND_URL + '/countries')
-    genres_response = requests.get(BUSINESS_BACKEND_URL + '/course_genres')
+    countries_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries')
+    genres_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/course_genres')
 
     countries_response_json = countries_response.json()
     genres_response_json = genres_response.json()
@@ -300,9 +301,9 @@ async def profile_setup():
 @app.get('/course_setup')
 async def course_setup():
     # TODO: A lot of repeated code from profile_setup
-    countries_response = requests.get(BUSINESS_BACKEND_URL + '/countries')
-    genres_response = requests.get(BUSINESS_BACKEND_URL + '/course_genres')
-    subscriptions_response = requests.get(BUSINESS_BACKEND_URL + '/subscription_types')
+    countries_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries')
+    genres_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/course_genres')
+    subscriptions_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/subscription_types')
 
     countries_response_json = countries_response.json()
     genres_response_json = genres_response.json()
