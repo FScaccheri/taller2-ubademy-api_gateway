@@ -149,7 +149,7 @@ async def sign_up(request: Request):
         'email': response_json['email'],
         'name': response_json['name'],
     }
-    profile_response = requests.post(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create_profile', json=profile_json)
+    profile_response = requests.post(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/create', json=profile_json)
     profile_response_json = profile_response.json()
     # TODO: ELIMINAR EL PERFIL EN USERS SI FALLO LA CREACION DEL PERFIL
     if profile_response.status_code != 200:
@@ -232,7 +232,7 @@ async def business_ping():
 
 @app.get('/courses/{course_id}', dependencies=[Depends(authenticate_token)])
 async def get_course(request: Request, course_id: str):
-    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f"/course/{course_id}")
+    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f"/{course_id}")
     response_json = response.json()
 
     if response.status_code != 200:
@@ -246,7 +246,7 @@ async def get_course(request: Request, course_id: str):
 async def create_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['email'] = current_user.email
-    response = requests.post(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create_course', json=request_json)
+    response = requests.post(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create', json=request_json)
     response_json = response.json()
 
     if response.status_code != 200:
@@ -260,7 +260,7 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
 async def update_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['email'] = current_user.email
-    response = requests.put(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/update_course', json=request_json)
+    response = requests.put(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/update', json=request_json)
     response_json = response.json()
 
     if response.status_code != 200:
@@ -272,7 +272,7 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
 
 @app.get('/search_courses/{filter_type}/{filter_value}')
 async def search_courses(filter_type: str, filter_value: str):
-    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized_courses/{filter_type}/{filter_value}')
+    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized/{filter_type}/{filter_value}')
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
     return response.json()
@@ -331,7 +331,7 @@ async def udpate_profile(request: Request, current_user: dict = Depends(get_curr
     request_json = await request.json()
     request_json['email'] = current_user.email
     response = requests.post(
-        BUSINESS_BACKEND_URL + '/update_profile',
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/update',
         json=request_json
     )
     response_json = response.json()
@@ -344,7 +344,7 @@ async def udpate_profile(request: Request, current_user: dict = Depends(get_curr
 async def get_profile(profile_email: str, token_data=Depends(authenticate_token)):
     privilege: str = 'admin' if token_data.is_admin else 'user'
     response = requests.get(
-        BUSINESS_BACKEND_URL + f"/profile/{token_data.email}/{privilege}/{profile_email}"
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + f"/{token_data.email}/{privilege}/{profile_email}"
     )
     response_json = response.json()
     if response.status_code != 200 or response_json['status'] == 'error':
