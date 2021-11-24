@@ -35,7 +35,7 @@ def test_get_course(mock_get_course):
     assert response.status_code == 200
     assert response_data['status'] == 'ok'
     assert 'course' in response_data
-    assert response_data['course']['title'] == 'My new course'
+    assert response_data['course']['title'] == 'My course'
 
 
 @patch('main.requests.post')
