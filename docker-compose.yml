@@ -8,7 +8,18 @@ services:
       - "8001"
     volumes:
       - ./../taller2-ubademy-users:/app
-      
+
+  mongodb_business:
+    container_name: mongodb_business
+    image: mongo
+    expose:
+      - "27017"
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./../taller2-ubademy-business/mongodb/database:/data/db
+
   backend_business:
     build: ../taller2-ubademy-business
     container_name: backend_business
@@ -18,6 +29,8 @@ services:
     volumes:
       - ./../taller2-ubademy-business:/app 
       - /app/node_modules
+    depends_on:
+      - mongodb_business
 
   backend_api_gateway:
     build: .
