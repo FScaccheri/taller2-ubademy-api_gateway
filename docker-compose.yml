@@ -18,7 +18,7 @@ services:
       - PUID=1000
       - PGID=1000
     volumes:
-      - ./../taller2-ubademy-business/mongodb/database:/data/db
+      - ./../taller2-ubademy-business/compose_mongodb/database:/data/db
 
   backend_business:
     build: ../taller2-ubademy-business
