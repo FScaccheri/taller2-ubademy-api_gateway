@@ -147,7 +147,6 @@ async def sign_up(request: Request):
     # Creo el perfil
     profile_json = {
         'email': response_json['email'],
-        'name': response_json['name'],
     }
     profile_response = requests.post(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/create', json=profile_json)
     profile_response_json = profile_response.json()
