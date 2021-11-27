@@ -1,5 +1,18 @@
 version: '3.3'
-services: 
+services:
+
+  postgres:
+    image: 'postgres:latest'
+    restart: always
+    volumes:
+      - './../taller2-ubademy-users/compose_postgres_db/postgres_data:/var/lib/postgresql/data'
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - POSTGRES_PASSWORD=123456
+    expose:
+      - "5432"
+
   backend_users:
     build: ../taller2-ubademy-users
     container_name: backend_users
@@ -8,6 +21,8 @@ services:
       - "8001"
     volumes:
       - ./../taller2-ubademy-users:/app
+    depends_on:
+      - postgres
 
   mongodb_business:
     container_name: mongodb_business
