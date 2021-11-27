@@ -94,10 +94,6 @@ async def get_current_user(token_data: TokenData = Depends(authenticate_token)):
     return user
 
 
-def users_login(request_json: dict):
-    return requests.post(USERS_BACKEND_URL + '/login', json=request_json)
-
-
 # ENDPOINTS:
 
 @app.get('/')
