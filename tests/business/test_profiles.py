@@ -6,7 +6,7 @@ from tests.test_main import client
 def test_get_profile(mock_get_profile):
     email = 'mail@mail.com'
 
-    mock_get_profile.return_value = MagicMock(status_code=200, )
+    mock_get_profile.return_value = MagicMock(status_code=200)
     mock_get_profile.return_value.json.return_value = {
         'status': 'ok',
         'profile': {
@@ -31,7 +31,7 @@ def test_get_profile(mock_get_profile):
 
 @patch('main.requests.post')
 def test_update_profile(mock_update_profile):
-    mock_update_profile.return_value = MagicMock(status_code=200, )
+    mock_update_profile.return_value = MagicMock(status_code=200)
     mock_update_profile.return_value.json.return_value = {'status': 'ok'}
 
     response = client.put('/update_profile', json={
