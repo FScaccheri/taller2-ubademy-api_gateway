@@ -277,6 +277,28 @@ async def search_courses(filter_type: str, filter_value: str):
     return response.json()
 
 
+@app.post('/courses/create_exam')
+async def create_exam(request: Request, token: str = Depends(authenticate_token)):
+    request_json = await request.json()
+    request_json['email'] = token.email
+    response = requests.post(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create_exam', json=request_json)
+    response_json = response.json()
+    if response.status_code != 200:
+        return public_status_messages.get("error_unexpected")
+    return response_json
+
+
+@app.put('/courses/edit_exam')
+async def edit_exam(request: Request, token: str = Depends(authenticate_token)):
+    request_json = await request.json()
+    request_json['email'] = token.email
+    response = requests.put(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/edit_exam', json=request_json)
+    response_json = response.json()
+    if response.status_code != 200:
+        return public_status_messages.get("error_unexpected")
+    return response_json
+
+
 @app.get('/profile_setup')
 async def profile_setup():
     countries_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries')
