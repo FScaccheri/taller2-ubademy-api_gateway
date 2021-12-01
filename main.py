@@ -361,9 +361,10 @@ async def modify_subscription(request: Request, current_user: dict = Depends(get
         json=request_json
     )
     response_json = response.json()
+    print("RESPONSE GATEWAY", response_json)
     if response.status_code != 200 or response_json['status'] == 'error':
-        return {"status": "ok", "message": "could not update subscription"}
-    return {"status": "error", "message": "subscription updated successfully"}
+        return {"status": "error", "message": "could not update subscription"}
+    return {"status": "ok", "message": "subscription updated successfully"}
     #Errores placeholder, despues los meto en el config
 
 if __name__ == '__main__':
