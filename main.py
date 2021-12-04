@@ -272,18 +272,30 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
     return response_json
 
 
-@app.get('/courses/{course_id}/students', dependencies=[Depends(get_current_user)])
-async def course_students(course_id: int):
-    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/students')
+@app.get('/courses/{course_id}/students')
+async def course_students(course_id: int, current_user=Depends(get_current_user)):
+    request_json = {
+        'email': current_user.email
+    }
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/students',
+        json=request_json
+    )
     response_json = response.json()
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
     return response_json
 
 
-@app.get('/courses/{course_id}/exams', dependencies=[Depends(get_current_user)])
-async def course_exams(course_id: int):
-    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/exams')
+@app.get('/courses/{course_id}/exams')
+async def course_exams(course_id: int, current_user=Depends(get_current_user)):
+    request_json = {
+        'email': current_user.email
+    }
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/exams',
+        json=request_json
+    )
     response_json = response.json()
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
