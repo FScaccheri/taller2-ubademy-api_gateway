@@ -108,3 +108,50 @@ def test_search_course(mock_search_course):
     assert response_data['status'] == 'ok'
     assert response_data['courses'][0]['title'] == 'Course 2'
     assert response_data['courses'][0]['subscription_type'] == 'Free'
+
+
+@patch('main.requests.get')
+def test_course_students(mock_course_students):
+    mock_course_students.return_value = MagicMock(status_code=200)
+    mock_course_students.return_value.json.return_value = {
+        'status': 'ok',
+        'students': [
+            'student1@mail.com',
+            'student2@mail.com',
+            'student3@mail.com',
+            'student4@mail.com'
+        ]
+    }
+
+    response = client.get('/courses/1/students')
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+    assert 'students' in response_data
+    assert len(response_data['students']) == 4
+
+
+@patch('main.requests.get')
+def test_course_exams(mock_course_exams):
+    mock_course_exams.return_value = MagicMock(status_code=200)
+    mock_course_exams.return_value.json.return_value = {
+        'status': 'ok',
+        'exams': [
+            {'name': 'First exam', 'questions': 1},
+            {'name': 'First exam', 'questions': 10},
+            {'name': 'First exam', 'questions': 4},
+            {'name': 'First exam', 'questions': 7},
+            {'name': 'First exam', 'questions': 2},
+        ]
+    }
+
+    response = client.get('/courses/1/exams')
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+    assert 'exams' in response_data
+    assert len(response_data['exams']) == 5
