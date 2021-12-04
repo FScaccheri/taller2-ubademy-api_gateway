@@ -25,6 +25,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL', 'http://0.0.0.0:8001')
 BUSINESS_BACKEND_URL = os.environ.get('BUSINESS_BACKEND_URL', 'http://0.0.0.0:8002')
+PAYMENTS_BACKEND_URL = os.environ.get('PAYMENTS_BACKEND_URL', 'http://0.0.0.0:8003')
 
 COURSES_PREFIX = '/courses'
 PROFILES_PREFIX = '/profiles'
@@ -351,7 +352,7 @@ async def get_profile(profile_email: str, token_data=Depends(authenticate_token)
 
     return response_json
 
-#PAYMENT ENDPOINTS(GATEWAY -> BUSINESS -> PAYMENTS)
+#SUBSCRIPTION ENDPOINTS
 @app.post('/modify_subscription')
 async def modify_subscription(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()#Should have the new subscription wanted(Silver, Gold, Platinum)
@@ -363,9 +364,22 @@ async def modify_subscription(request: Request, current_user: dict = Depends(get
     response_json = response.json()
     print("RESPONSE GATEWAY", response_json)
     if response.status_code != 200 or response_json['status'] == 'error':
-        return {"status": "error", "message": "could not update subscription"}
-    return {"status": "ok", "message": "subscription updated successfully"}
-    #Errores placeholder, despues los meto en el config
+        return {"status": "error", "message": response_json["message"]}#Despues meterlo en los errores de config
+    return response_json
+
+@app.post('/pay_subscription')
+async def pay_subscription(request: Request, current_user: dict = Depends(get_current_user)):
+    request_json = await request.json()#Should have the new subscription wanted(Silver, Gold, Platinum)
+    request_json['email'] = current_user.email
+    response = requests.post(
+        PAYMENTS_BACKEND_URL + '/deposit',
+        json=request_json
+    )
+    response_json = response.json()
+    print("RESPONSE GATEWAY", response_json)
+    if response.status_code != 200 or response_json['status'] == 'error':
+        return {"status": "error", "message": response_json["message"]}#Despues meterlo en los errores de config
+    return response_json
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
