@@ -294,7 +294,7 @@ async def course_exams(course_id: int, current_user=Depends(get_current_user)):
     return response_json
 
 
-@app.get('/courses/{course_id}/students_exams/{filter}')
+@app.get('/courses/{course_id}/students_exams/{exam_filter}')
 async def student_exams(course_id: int, exam_filter: str, current_user=Depends(get_current_user)):
     response = requests.get(
         BUSINESS_BACKEND_URL + COURSES_PREFIX +
