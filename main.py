@@ -148,7 +148,10 @@ async def sign_up(request: Request):
     profile_json = {
         'email': response_json['email'],
     }
-    profile_response = requests.post(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/create', json=profile_json)
+    profile_response = requests.post(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/create',
+        json=profile_json
+    )
     profile_response_json = profile_response.json()
     # TODO: ELIMINAR EL PERFIL EN USERS SI FALLO LA CREACION DEL PERFIL
     if profile_response.status_code != 200:
@@ -269,9 +272,29 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
     return response_json
 
 
+@app.get('/courses/{course_id}/students', dependencies=[Depends(get_current_user)])
+async def course_students(course_id: int):
+    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/students')
+    response_json = response.json()
+    if response.status_code != 200:
+        return public_status_messages.get("error_unexpected")
+    return response_json
+
+
+@app.get('/courses/{course_id}/exams', dependencies=[Depends(get_current_user)])
+async def course_exams(course_id: int):
+    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/exams')
+    response_json = response.json()
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    return response_json
+
+
 @app.get('/search_courses/{filter_type}/{filter_value}')
 async def search_courses(filter_type: str, filter_value: str):
-    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized/{filter_type}/{filter_value}')
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized/{filter_type}/{filter_value}'
+    )
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
     return response.json()
@@ -300,9 +323,15 @@ async def profile_setup():
 @app.get('/course_setup')
 async def course_setup():
     # TODO: A lot of repeated code from profile_setup
-    countries_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries')
-    genres_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/course_genres')
-    subscriptions_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/subscription_types')
+    countries_response = requests.get(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries'
+    )
+    genres_response = requests.get(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/course_genres'
+    )
+    subscriptions_response = requests.get(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/subscription_types'
+    )
 
     countries_response_json = countries_response.json()
     genres_response_json = genres_response.json()
