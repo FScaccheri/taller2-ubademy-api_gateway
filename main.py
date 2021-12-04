@@ -274,12 +274,8 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
 
 @app.get('/courses/{course_id}/students')
 async def course_students(course_id: int, current_user=Depends(get_current_user)):
-    request_json = {
-        'email': current_user.email
-    }
     response = requests.get(
-        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/students',
-        json=request_json
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/students/{current_user.email}'
     )
     response_json = response.json()
     if response.status_code != 200:
@@ -289,12 +285,8 @@ async def course_students(course_id: int, current_user=Depends(get_current_user)
 
 @app.get('/courses/{course_id}/exams')
 async def course_exams(course_id: int, current_user=Depends(get_current_user)):
-    request_json = {
-        'email': current_user.email
-    }
     response = requests.get(
-        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/exams',
-        json=request_json
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/exams{current_user.email}'
     )
     response_json = response.json()
     if response.status_code != 200:
