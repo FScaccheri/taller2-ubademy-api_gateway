@@ -86,3 +86,111 @@ def test_failed_edit_exam(mock_edit_exam):
     assert response.status_code == 200
     assert response_data['status'] == 'error'
     assert 'message' in response_data
+
+
+@patch('main.requests.post')
+def test_publish_exam(mock_publish_exam):
+    mock_publish_exam.return_value = MagicMock(status_code=200)
+    mock_publish_exam.return_value.json.return_value = {
+        'status': 'ok',
+        'message': 'exam published'
+    }
+
+    request_data = {
+        'course_id': '123456789',
+        'exam_name': 'Exam name 1'
+    }
+
+    response = client.post('courses/publish_exam', json=request_data)
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+    assert 'message' in response_data
+    assert response_data['message'] == 'exam published'
+
+
+@patch('main.requests.post')
+def test_failed_publish_exam(mock_publish_exam):
+    mock_publish_exam.return_value = MagicMock(status_code=200)
+    mock_publish_exam.return_value.json.return_value = {
+        'status': 'error',
+        'message': 'unexpected_error'
+    }
+
+    request_data = {
+        'course_id': '123456789',
+        'exam_name': 'Exam name 1'
+    }
+
+    response = client.post('courses/publish_exam', json=request_data)
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'error'
+    assert 'message' in response_data
+    assert response_data['message'] == 'unexpected_error'
+
+
+@patch('main.requests.post')
+def test_grade_exam(mock_grade_exam):
+    mock_grade_exam.return_value = MagicMock(status_code=200)
+    mock_grade_exam.return_value.json.return_value = {
+        'status': 'ok',
+        'message': 'exam graded'
+    }
+
+    request_data = {
+        'course_id': '123456789',
+        'exam_name': 'Exam name 1',
+        'student_email': 'student@mail.com',
+        'professor_email': 'professor@mail.com',
+        'mark': 6,
+        'corrections': [
+            'Punto A bien',
+            'Punto B mal',
+            'Punto C excelente'
+        ]
+    }
+
+    response = client.post('courses/grade_exam', json=request_data)
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+    assert 'message' in response_data
+    assert response_data['message'] == 'exam graded'
+
+
+@patch('main.requests.post')
+def test_failed_grade_exam(mock_grade_exam):
+    mock_grade_exam.return_value = MagicMock(status_code=200)
+    mock_grade_exam.return_value.json.return_value = {
+        'status': 'error',
+        'message': 'non existent exam'
+    }
+
+    request_data = {
+        'course_id': '123456789',
+        'exam_name': 'Non existant',
+        'student_email': 'student@mail.com',
+        'professor_email': 'professor@mail.com',
+        'mark': 2,
+        'corrections': [
+            'Punto A mal',
+            'Punto B mal',
+            'Punto C mal'
+        ]
+    }
+
+    response = client.post('courses/grade_exam', json=request_data)
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'error'
+    assert 'message' in response_data
+    assert response_data['message'] == 'non existent exam'
