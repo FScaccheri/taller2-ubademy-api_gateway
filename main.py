@@ -338,6 +338,20 @@ async def grade_exam(request: Request, token: str = Depends(authenticate_token))
     return response_json
 
 
+@app.post('/courses/complete_exam')
+async def complete_exam(request: Request, current_user: str = Depends(get_current_user)):
+    request_json = await request.json()
+    request_json['email'] = current_user.email
+    response = requests.post(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + '/complete_exam',
+        json=request_json
+    )
+    response_json = response.json()
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    return response_json
+
+
 @app.get('/profile_setup')
 async def profile_setup():
     countries_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries')
