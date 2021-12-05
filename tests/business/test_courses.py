@@ -176,3 +176,20 @@ def test_student_exams(mock_student_exams):
     assert response_data['status'] == 'ok'
     assert 'exams' in response_data
     assert len(response_data['exams']) == 2
+
+
+@patch('main.requests.get')
+def test_get_course_exam(mock_course_exam):
+    mock_course_exam.return_value = MagicMock(status_code=200)
+    mock_course_exam.return_value.json.return_value = {
+        'status': 'ok',
+        'exam': {'name': 'First exam', 'questions': 10, 'mark': 10}
+    }
+
+    response = client.get('/courses/1/students_exams/completed_exam')
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+    assert 'exam' in response_data
