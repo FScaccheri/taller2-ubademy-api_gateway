@@ -23,6 +23,8 @@ SECRET_KEY = '944211eb42c3b243739503a1d36225a91317cffe7d1b445add87920b380ddae5'
 ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
+USERS_API_KEY = 'db927b6105712695971a38fa593db084d95f86f68a1f85030ff5326d7a30c673'
+
 USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL', 'http://0.0.0.0:8001')
 BUSINESS_BACKEND_URL = os.environ.get('BUSINESS_BACKEND_URL', 'http://0.0.0.0:8002')
 
@@ -110,7 +112,10 @@ async def read_users_me(current_user: dict = Depends(get_current_user)):
 
 @app.get('/users/ping', dependencies=[Depends(authenticate_token)])
 async def users_ping():
-    response = requests.get(USERS_BACKEND_URL + '/pong')
+    response = requests.get(
+        USERS_BACKEND_URL + '/pong',
+        headers={'Authorization': USERS_API_KEY}
+    )
     return response.json()
 
 
