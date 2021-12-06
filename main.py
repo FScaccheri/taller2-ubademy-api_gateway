@@ -313,7 +313,7 @@ async def get_course_exam(
 ):
     response = requests.get(
         BUSINESS_BACKEND_URL + COURSES_PREFIX +
-        f'/{course_id}/exam/{current_user}/{exam_name}/{exam_filter}'
+        f'/{course_id}/exam/{current_user.email}/{exam_name}/{exam_filter}'
     )
     response_json = response.json()
     if response.status_code != 200:
