@@ -273,7 +273,7 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
 
 
 @app.get('/courses/{course_id}/students')
-async def course_students(course_id: int, current_user=Depends(get_current_user)):
+async def course_students(course_id: str, current_user=Depends(get_current_user)):
     response = requests.get(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/students/{current_user.email}'
     )
@@ -284,7 +284,7 @@ async def course_students(course_id: int, current_user=Depends(get_current_user)
 
 
 @app.get('/courses/{course_id}/exams')
-async def course_exams(course_id: int, current_user=Depends(get_current_user)):
+async def course_exams(course_id: str, current_user=Depends(get_current_user)):
     response = requests.get(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/exams/{current_user.email}'
     )
@@ -295,7 +295,7 @@ async def course_exams(course_id: int, current_user=Depends(get_current_user)):
 
 
 @app.get('/courses/{course_id}/students_exams/{exam_filter}')
-async def student_exams(course_id: int, exam_filter: str, current_user=Depends(get_current_user)):
+async def student_exams(course_id: str, exam_filter: str, current_user=Depends(get_current_user)):
     response = requests.get(
         BUSINESS_BACKEND_URL + COURSES_PREFIX +
         f'/{course_id}/students_exams/{current_user.email}/{exam_filter}'
@@ -308,7 +308,7 @@ async def student_exams(course_id: int, exam_filter: str, current_user=Depends(g
 
 @app.get('/courses/{course_id}/exam/{exam_name}/{exam_filter}')
 async def get_course_exam(
-        course_id: int, exam_name: str, exam_filter: str,
+        course_id: str, exam_name: str, exam_filter: str,
         current_user=Depends(get_current_user)
 ):
     response = requests.get(
