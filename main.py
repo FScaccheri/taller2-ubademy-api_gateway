@@ -272,6 +272,55 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
     return response_json
 
 
+@app.get('/courses/{course_id}/students')
+async def course_students(course_id: int, current_user=Depends(get_current_user)):
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/students/{current_user.email}'
+    )
+    response_json = response.json()
+    if response.status_code != 200:
+        return public_status_messages.get("error_unexpected")
+    return response_json
+
+
+@app.get('/courses/{course_id}/exams')
+async def course_exams(course_id: int, current_user=Depends(get_current_user)):
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/exams/{current_user.email}'
+    )
+    response_json = response.json()
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    return response_json
+
+
+@app.get('/courses/{course_id}/students_exams/{exam_filter}')
+async def student_exams(course_id: int, exam_filter: str, current_user=Depends(get_current_user)):
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX +
+        f'/{course_id}/students_exams/{current_user.email}/{exam_filter}'
+    )
+    response_json = response.json()
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    return response_json
+
+
+@app.get('/courses/{course_id}/exam/{exam_name}/{exam_filter}')
+async def get_course_exam(
+        course_id: int, exam_name: str, exam_filter: str,
+        current_user=Depends(get_current_user)
+):
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX +
+        f'/{course_id}/exam/{current_user.email}/{exam_name}/{exam_filter}'
+    )
+    response_json = response.json()
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    return response_json
+
+
 @app.get('/search_courses/{filter_type}/{filter_value}')
 async def search_courses(filter_type: str, filter_value: str):
     response = requests.get(
