@@ -372,7 +372,7 @@ async def pay_subscription(request: Request, current_user: dict = Depends(get_cu
     request_json = await request.json()#Should have the new subscription wanted(Silver, Gold, Platinum)
     request_json['email'] = current_user.email
     response = requests.post(
-        PAYMENTS_BACKEND_URL + '/deposit',
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/pay_subscription',
         json=request_json
     )
     response_json = response.json()
