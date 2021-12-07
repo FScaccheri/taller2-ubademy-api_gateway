@@ -124,7 +124,11 @@ async def users_ping():
 async def login(request: Request):
     # The documentation uses data instead of json but it is not updated
     request_json = await request.json()
-    response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
+    response = requests.post(
+        USERS_BACKEND_URL + request.url.path,
+        json=request_json,
+        headers={'Authorization': USERS_API_KEY}
+    )
     response_json = response.json()
     if response.status_code != 200 or response_json['status'] == 'error':
         return public_status_messages.get('failed_authentication')
@@ -143,7 +147,11 @@ async def login(request: Request):
 
 @app.post('/sign_up')
 async def sign_up(request: Request):
-    response = requests.post(USERS_BACKEND_URL + '/create/', json=await request.json())
+    response = requests.post(
+        USERS_BACKEND_URL + '/create/',
+        json=await request.json(),
+        headers={'Authorization': USERS_API_KEY}
+    )
     response_json = response.json()
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
@@ -186,9 +194,13 @@ async def users_count():
 @app.post('/admin_login')
 async def admin_login(request: Request):
     request_json = await request.json()
-    response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
+    response = requests.post(
+        USERS_BACKEND_URL + request.url.path,
+        json=request_json,
+        headers={'Authorization': USERS_API_KEY}
+    )
     response_json = response.json()
-    if (response.status_code != 200 or response_json['status'] == 'error'):
+    if response.status_code != 200 or response_json['status'] == 'error':
         return public_status_messages.get('failed_authentication')
 
     access_token_data = {
@@ -209,7 +221,11 @@ async def admin_login(request: Request):
 
 @app.post('/admin_register')
 async def admin_register(request: Request, _token=Depends(authenticate_admin_token)):
-    response = requests.post(USERS_BACKEND_URL + '/admin_create/', json=await request.json())
+    response = requests.post(
+        USERS_BACKEND_URL + '/admin_create/',
+        json=await request.json(),
+        headers={'Authorization': USERS_API_KEY}
+    )
     response_json = response.json()
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
@@ -222,7 +238,10 @@ async def admin_register(request: Request, _token=Depends(authenticate_admin_tok
 
 @app.get('/get_all_users')
 async def get_all_users(_token=Depends(authenticate_admin_token)):
-    response = requests.get(USERS_BACKEND_URL + '/users_list')
+    response = requests.get(
+        USERS_BACKEND_URL + '/users_list',
+        headers={'Authorization': USERS_API_KEY}
+    )
     response_json = response.json()
     if response.status_code != 200 or response_json['status'] == 'error':
         return public_status_messages.get('users_list_error')
