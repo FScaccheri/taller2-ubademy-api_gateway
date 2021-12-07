@@ -235,10 +235,10 @@ async def business_ping():
 @app.get('/courses/{course_id}', dependencies=[Depends(authenticate_token)])
 async def get_course(request: Request, course_id: str):
     response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f"/{course_id}")
-    response_json = response.json()
-
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
+
+    response_json = response.json()
     if response_json['status'] == 'error':
         return public_status_messages.get(response_json['message'])
     return response_json
@@ -249,10 +249,10 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
     request_json = await request.json()
     request_json['email'] = current_user.email
     response = requests.post(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create', json=request_json)
-    response_json = response.json()
-
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
+
+    response_json = response.json()
     if response_json['status'] == 'error':
         return public_status_messages.get(response_json['message'])
     return response_json
@@ -263,10 +263,10 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
     request_json = await request.json()
     request_json['email'] = current_user.email
     response = requests.put(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/update', json=request_json)
-    response_json = response.json()
 
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
+    response_json = response.json()
     if response_json['status'] == 'error':
         return public_status_messages.get(response_json['message'])
     return response_json
@@ -277,9 +277,9 @@ async def course_students(course_id: str, current_user=Depends(get_current_user)
     response = requests.get(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/students/{current_user.email}'
     )
-    response_json = response.json()
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
+    response_json = response.json()
     return response_json
 
 
@@ -288,9 +288,9 @@ async def course_exams(course_id: str, current_user=Depends(get_current_user)):
     response = requests.get(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/exams/{current_user.email}'
     )
-    response_json = response.json()
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
+    response_json = response.json()
     return response_json
 
 
@@ -300,9 +300,9 @@ async def student_exams(course_id: str, exam_filter: str, current_user=Depends(g
         BUSINESS_BACKEND_URL + COURSES_PREFIX +
         f'/{course_id}/students_exams/{current_user.email}/{exam_filter}'
     )
-    response_json = response.json()
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
+    response_json = response.json()
     return response_json
 
 
@@ -315,9 +315,9 @@ async def get_course_exam(
         BUSINESS_BACKEND_URL + COURSES_PREFIX +
         f'/{course_id}/exam/{current_user.email}/{exam_name}/{exam_filter}'
     )
-    response_json = response.json()
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
+    response_json = response.json()
     return response_json
 
 
@@ -339,9 +339,9 @@ async def create_exam(request: Request, token: str = Depends(authenticate_token)
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create_exam',
         json=request_json
     )
-    response_json = response.json()
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
+    response_json = response.json()
     return response_json
 
 
@@ -353,9 +353,9 @@ async def edit_exam(request: Request, token: str = Depends(authenticate_token)):
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/edit_exam',
         json=request_json
     )
-    response_json = response.json()
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
+    response_json = response.json()
     return response_json
 
 
@@ -367,9 +367,9 @@ async def publish_exam(request: Request, token: str = Depends(authenticate_token
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/publish_exam',
         json=request_json
     )
-    response_json = response.json()
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
+    response_json = response.json()
     return response_json
 
 
@@ -381,9 +381,9 @@ async def grade_exam(request: Request, token: str = Depends(authenticate_token))
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/grade_exam',
         json=request_json
     )
-    response_json = response.json()
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
+    response_json = response.json()
     return response_json
 
 
@@ -395,9 +395,9 @@ async def complete_exam(request: Request, current_user: str = Depends(get_curren
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/complete_exam',
         json=request_json
     )
-    response_json = response.json()
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
+    response_json = response.json()
     return response_json
 
 
