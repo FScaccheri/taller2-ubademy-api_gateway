@@ -193,3 +193,35 @@ def test_get_course_exam(mock_course_exam):
     assert response.status_code == 200
     assert response_data['status'] == 'ok'
     assert 'exam' in response_data
+
+
+@patch('main.requests.post')
+def test_course_subscription(mock_course_subscription):
+    mock_course_subscription.return_value = MagicMock(status_code=200)
+    mock_course_subscription.return_value.json.return_value = {'status': 'ok'}
+
+    response = client.post('/courses/subscribe', json={
+        'course_id': 'someCourseId12345',
+        'user_email': 'test@mail.com'
+    })
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+
+
+@patch('main.requests.post')
+def test_course_unsubscription(mock_course_unsubscription):
+    mock_course_unsubscription.return_value = MagicMock(status_code=200)
+    mock_course_unsubscription.return_value.json.return_value = {'status': 'ok'}
+
+    response = client.post('/courses/unsubscribe', json={
+        'course_id': 'someCourseId12345',
+        'user_email': 'test@mail.com'
+    })
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
