@@ -362,9 +362,8 @@ async def modify_subscription(request: Request, current_user: dict = Depends(get
         json=request_json
     )
     response_json = response.json()
-    print("RESPONSE GATEWAY", response_json)
     if response.status_code != 200 or response_json['status'] == 'error':
-        return {"status": "error", "message": response_json["message"]}#Despues meterlo en los errores de config
+        return {"status": "error", "message": response_json["message"]}
     return response_json
 
 @app.post('/pay_subscription')
@@ -376,9 +375,8 @@ async def pay_subscription(request: Request, current_user: dict = Depends(get_cu
         json=request_json
     )
     response_json = response.json()
-    print("RESPONSE GATEWAY", response_json)
     if response.status_code != 200 or response_json['status'] == 'error':
-        return {"status": "error", "message": response_json["message"]}#Despues meterlo en los errores de config
+        return {"status": "error", "message": response_json["message"]}
     return response_json
 
 if __name__ == '__main__':
