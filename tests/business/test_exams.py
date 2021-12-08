@@ -194,3 +194,76 @@ def test_failed_grade_exam(mock_grade_exam):
     assert response_data['status'] == 'error'
     assert 'message' in response_data
     assert response_data['message'] == 'non existent exam'
+
+
+@patch('main.requests.post')
+def test_complete_exam(mock_complete_exam):
+    mock_complete_exam.return_value = MagicMock(status_code=200)
+    mock_complete_exam.return_value.json.return_value = {
+        'status': 'ok',
+        'message': 'exam answered'
+    }
+
+    request_data = {
+        'course_id': '123456789',
+        'exam_name': 'Exam name 1',
+        'student_email': 'student@mail.com',
+        'answers': [
+            'Respuesta A',
+            'Respuesta B',
+            'Respuesta C'
+        ]
+    }
+
+    response = client.post('courses/complete_exam', json=request_data)
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+    assert 'message' in response_data
+    assert response_data['message'] == 'exam answered'
+
+
+@patch('main.requests.post')
+def test_failed_complete_exam(mock_complete_exam):
+    mock_complete_exam.return_value = MagicMock(status_code=200)
+    mock_complete_exam.return_value.json.return_value = {
+        'status': 'error',
+        'message': 'wrong answers amount'
+    }
+
+    request_data = {
+        'course_id': '123456789',
+        'exam_name': 'Non existant',
+        'student_email': 'student@mail.com',
+        'answers': [
+            'Respuesta C'
+        ]
+    }
+
+    response = client.post('courses/complete_exam', json=request_data)
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'error'
+    assert 'message' in response_data
+    assert response_data['message'] == 'wrong answers amount'
+
+
+@patch('main.requests.get')
+def test_get_student_exam(mock_student_exam):
+    mock_student_exam.return_value = MagicMock(status_code=200)
+    mock_student_exam.return_value.json.return_value = {
+        'status': 'ok',
+        'exam': {'name': 'First exam', 'questions': 10, 'mark': 10}
+    }
+
+    response = client.get('/courses/courseId12345/exam/First exam/completed_exam/student@mail.com')
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+    assert 'exam' in response_data
