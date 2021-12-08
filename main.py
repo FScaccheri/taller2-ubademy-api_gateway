@@ -268,16 +268,13 @@ async def business_ping():
     return response.json()
 
 
-@app.get('/courses/{course_id}', dependencies=[Depends(authenticate_token)])
-async def get_course(request: Request, course_id: str):
-    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f"/{course_id}")
+@app.get('/courses/{course_id}')
+async def get_course(request: Request, course_id: str, current_user: dict = Depends(get_current_user)):
+    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f"/{course_id}/{current_user.email}")
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
 
-    response_json = response.json()
-    if response_json['status'] == 'error':
-        return public_status_messages.get(response_json['message'])
-    return response_json
+    return response.json()
 
 
 @app.post('/courses/create_course')

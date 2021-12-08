@@ -46,7 +46,7 @@ services:
       - /app/node_modules
     depends_on:
       - mongodb_business
-
+      
   backend_payments:
     build: ../taller2-ubademy-payments
     container_name: backend_payments
@@ -54,10 +54,10 @@ services:
     expose:
       - "8003"
     volumes:
-      - ../taller2-ubademy-payments:/app
+      - ./../taller2-ubademy-payments:/app
       - /app/node_modules
     depends_on:
-      - mongodb_business
+      - backend_business
 
   backend_api_gateway:
     build: .
@@ -72,4 +72,5 @@ services:
     depends_on:
       - backend_users
       - backend_business
+      - backend_payments
 
