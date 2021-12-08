@@ -312,7 +312,7 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
     return response_json
 
 
-@app.get('/search_courses/{filter_type}/{filter_value}')
+@app.get('/search_courses/{filter_type}/{filter_value}', dependencies=[Depends(get_current_user)])
 async def search_courses(filter_type: str, filter_value: str):
     response = requests.get(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized/{filter_type}/{filter_value}',
