@@ -22,10 +22,12 @@ from exceptions.invalid_credentials_exception import InvalidCredentialsException
 SECRET_KEY = '944211eb42c3b243739503a1d36225a91317cffe7d1b445add87920b380ddae5'
 ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+OAUTH_ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
 
 USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL', 'http://0.0.0.0:8001')
 BUSINESS_BACKEND_URL = os.environ.get('BUSINESS_BACKEND_URL', 'http://0.0.0.0:8002')
 PAYMENTS_BACKEND_URL = os.environ.get('PAYMENTS_BACKEND_URL', 'http://0.0.0.0:8003')
+GOOGLE_OAUTH_URL = 'https://www.googleapis.com/oauth2/v3'
 
 COURSES_PREFIX = '/courses'
 PROFILES_PREFIX = '/profiles'
@@ -149,7 +151,10 @@ async def sign_up(request: Request):
     profile_json = {
         'email': response_json['email'],
     }
-    profile_response = requests.post(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/create', json=profile_json)
+    profile_response = requests.post(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/create',
+        json=profile_json
+    )
     profile_response_json = profile_response.json()
     # TODO: ELIMINAR EL PERFIL EN USERS SI FALLO LA CREACION DEL PERFIL
     if profile_response.status_code != 200:
@@ -164,6 +169,40 @@ async def sign_up(request: Request):
     token_json = Token(access_token=access_token, token_type='bearer').dict()
     return {
         **response_json,
+        **token_json
+    }
+
+
+@app.post('/oauth_login')
+async def oauth_login(request: Request):
+    request_json = await request.json()
+    request_email = request_json['email']
+    access_token = request_json['accessToken']
+    google_response = requests.get(GOOGLE_OAUTH_URL + f'/tokeninfo?access_token={access_token}')
+    if google_response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+
+    google_response_json = google_response.json()
+    google_response_email = google_response_json['email']
+    if not google_response_json['email_verified'] or request_email != google_response_email:
+        return public_status_messages.get('unverified_google_user')
+
+    users_response = requests.post(
+        USERS_BACKEND_URL + '/oauth_login',
+        json={'email': request_email}
+    )
+    if users_response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    users_response_json = users_response.json()
+
+    # Creo el token
+    access_token_expires = timedelta(minutes=OAUTH_ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={'sub': request_email}, expires_delta=access_token_expires
+    )
+    token_json = Token(access_token=access_token, token_type='bearer').dict()
+    return {
+        **users_response_json,
         **token_json
     }
 
@@ -233,10 +272,10 @@ async def business_ping():
 @app.get('/courses/{course_id}', dependencies=[Depends(authenticate_token)])
 async def get_course(request: Request, course_id: str):
     response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f"/{course_id}")
-    response_json = response.json()
-
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
+
+    response_json = response.json()
     if response_json['status'] == 'error':
         return public_status_messages.get(response_json['message'])
     return response_json
@@ -247,10 +286,10 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
     request_json = await request.json()
     request_json['email'] = current_user.email
     response = requests.post(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create', json=request_json)
-    response_json = response.json()
-
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
+
+    response_json = response.json()
     if response_json['status'] == 'error':
         return public_status_messages.get(response_json['message'])
     return response_json
@@ -261,21 +300,184 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
     request_json = await request.json()
     request_json['email'] = current_user.email
     response = requests.put(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/update', json=request_json)
-    response_json = response.json()
 
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
+    response_json = response.json()
     if response_json['status'] == 'error':
         return public_status_messages.get(response_json['message'])
     return response_json
 
 
+@app.post('/courses/subscribe')
+async def subscribe_to_course(request: Request, current_user: dict = Depends(get_current_user)):
+    request_json = await request.json()
+    request_json['user_email'] = current_user.email
+    response = requests.post(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + '/subscribe_to_course',
+        json=request_json
+    )
+
+    if response.status_code != 200:
+        return public_status_messages.get("error_unexpected")
+    return response.json()
+
+
+@app.post('/courses/unsubscribe')
+async def unsubscribe_to_course(request: Request, current_user: dict = Depends(get_current_user)):
+    request_json = await request.json()
+    request_json['user_email'] = current_user.email
+    response = requests.post(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + '/unsubscribe_from_course',
+        json=request_json
+    )
+
+    if response.status_code != 200:
+        return public_status_messages.get("error_unexpected")
+    return response.json()
+
+
+@app.get('/courses/{course_id}/students', dependencies=[Depends(get_current_user)])
+async def course_students(course_id: str):
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/students'
+    )
+    if response.status_code != 200:
+        return public_status_messages.get("error_unexpected")
+    response_json = response.json()
+    return response_json
+
+
+@app.get('/courses/{course_id}/{exam_name}/students')
+async def course_exam_students(course_id: str,
+                               exam_name: str,
+                               current_user=Depends(get_current_user)):
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX +
+        f'/{course_id}/{exam_name}/students/{current_user.email}'
+    )
+    if response.status_code != 200:
+        return public_status_messages.get("error_unexpected")
+    response_json = response.json()
+    return response_json
+
+
+@app.get('/courses/{course_id}/exams', dependencies=[Depends(get_current_user)])
+async def course_exams(course_id: str):
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/exams'
+    )
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    response_json = response.json()
+    return response_json
+
+
+@app.get('/courses/{course_id}/students_exams/{exam_filter}')
+async def student_exams(course_id: str, exam_filter: str, current_user=Depends(get_current_user)):
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX +
+        f'/{course_id}/students_exams/{current_user.email}/{exam_filter}'
+    )
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    response_json = response.json()
+    return response_json
+
+
+@app.get('/courses/{course_id}/exam/{exam_name}/{exam_filter}')
+async def get_course_exam(
+        course_id: str, exam_name: str, exam_filter: str,
+        current_user=Depends(get_current_user)
+):
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX +
+        f'/{course_id}/exam/{current_user.email}/{exam_name}/{exam_filter}'
+    )
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    response_json = response.json()
+    return response_json
+
+
 @app.get('/search_courses/{filter_type}/{filter_value}')
 async def search_courses(filter_type: str, filter_value: str):
-    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized/{filter_type}/{filter_value}')
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized/{filter_type}/{filter_value}'
+    )
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
     return response.json()
+
+
+@app.post('/courses/create_exam')
+async def create_exam(request: Request, token: str = Depends(authenticate_token)):
+    request_json = await request.json()
+    request_json['email'] = token.email
+    response = requests.post(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create_exam',
+        json=request_json
+    )
+    if response.status_code != 200:
+        return public_status_messages.get("error_unexpected")
+    response_json = response.json()
+    return response_json
+
+
+@app.put('/courses/edit_exam')
+async def edit_exam(request: Request, token: str = Depends(authenticate_token)):
+    request_json = await request.json()
+    request_json['email'] = token.email
+    response = requests.post(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + '/edit_exam',
+        json=request_json
+    )
+    if response.status_code != 200:
+        return public_status_messages.get("error_unexpected")
+    response_json = response.json()
+    return response_json
+
+
+@app.post('/courses/publish_exam')
+async def publish_exam(request: Request, token: str = Depends(authenticate_token)):
+    request_json = await request.json()
+    request_json['email'] = token.email
+    response = requests.post(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + '/publish_exam',
+        json=request_json
+    )
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    response_json = response.json()
+    return response_json
+
+
+@app.post('/courses/grade_exam')
+async def grade_exam(request: Request, token: str = Depends(authenticate_token)):
+    request_json = await request.json()
+    request_json['email'] = token.email
+    response = requests.post(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + '/grade_exam',
+        json=request_json
+    )
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    response_json = response.json()
+    return response_json
+
+
+@app.post('/courses/complete_exam')
+async def complete_exam(request: Request, current_user: str = Depends(get_current_user)):
+    request_json = await request.json()
+    request_json['email'] = current_user.email
+    response = requests.post(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + '/complete_exam',
+        json=request_json
+    )
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    response_json = response.json()
+    return response_json
 
 
 @app.get('/profile_setup')
@@ -301,9 +503,15 @@ async def profile_setup():
 @app.get('/course_setup')
 async def course_setup():
     # TODO: A lot of repeated code from profile_setup
-    countries_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries')
-    genres_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/course_genres')
-    subscriptions_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/subscription_types')
+    countries_response = requests.get(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries'
+    )
+    genres_response = requests.get(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/course_genres'
+    )
+    subscriptions_response = requests.get(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/subscription_types'
+    )
 
     countries_response_json = countries_response.json()
     genres_response_json = genres_response.json()
