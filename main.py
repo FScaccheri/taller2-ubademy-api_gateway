@@ -306,14 +306,14 @@ async def student_exams(course_id: str, exam_filter: str, current_user=Depends(g
     return response_json
 
 
-@app.get('/courses/{course_id}/exam/{exam_name}/{exam_filter}')
+@app.get('/courses/{course_id}/exam/{exam_name}/{exam_filter}/{student_email}')
 async def get_course_exam(
-        course_id: str, exam_name: str, exam_filter: str,
+        course_id: str, exam_name: str, exam_filter: str, student_email: str,
         current_user=Depends(get_current_user)
 ):
     response = requests.get(
         BUSINESS_BACKEND_URL + COURSES_PREFIX +
-        f'/{course_id}/exam/{current_user.email}/{exam_name}/{exam_filter}'
+        f'/{course_id}/exam/{current_user.email}/{exam_name}/{exam_filter}/{student_email}'
     )
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
@@ -322,9 +322,20 @@ async def get_course_exam(
 
 
 @app.get('/search_courses/{filter_type}/{filter_value}')
-async def search_courses(filter_type: str, filter_value: str):
+async def search_courses_by_filter_type(filter_type: str, filter_value: str):
     response = requests.get(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized/{filter_type}/{filter_value}'
+    )
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    return response.json()
+
+
+@app.get('/courses/search/{course_type}/{subscription_type}',
+         dependencies=[Depends(get_current_user)])
+async def search_courses(course_type: str, subscription_type: str):
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized/{course_type}/{subscription_type}'
     )
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
