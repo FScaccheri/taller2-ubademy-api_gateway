@@ -134,6 +134,27 @@ def test_course_students(mock_course_students):
 
 
 @patch('main.requests.get')
+def test_course_exam_students(mock_course_exam_students):
+    mock_course_exam_students.return_value = MagicMock(status_code=200)
+    mock_course_exam_students.return_value.json.return_value = {
+        'status': 'ok',
+        'students': [
+            'student2@mail.com',
+            'student5@mail.com'
+        ]
+    }
+
+    response = client.get('/courses/courseId12345/Primer parcial/students')
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+    assert 'students' in response_data
+    assert len(response_data['students']) == 2
+
+
+@patch('main.requests.get')
 def test_course_exams(mock_course_exams):
     mock_course_exams.return_value = MagicMock(status_code=200)
     mock_course_exams.return_value.json.return_value = {
