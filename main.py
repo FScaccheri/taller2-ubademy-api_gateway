@@ -24,6 +24,7 @@ ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 USERS_API_KEY = 'db927b6105712695971a38fa593db084d95f86f68a1f85030ff5326d7a30c673'
+BUSINESS_API_KEY = 'faf5b8b0651b9baf0919f77f5b50f9b872b3521f922c14c0ad12f696b50c1b73'
 
 USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL', 'http://0.0.0.0:8001')
 BUSINESS_BACKEND_URL = os.environ.get('BUSINESS_BACKEND_URL', 'http://0.0.0.0:8002')
@@ -163,7 +164,8 @@ async def sign_up(request: Request):
     }
     profile_response = requests.post(
         BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/create',
-        json=profile_json
+        json=profile_json,
+        headers={'Authorization': BUSINESS_API_KEY}
     )
     profile_response_json = profile_response.json()
     # TODO: ELIMINAR EL PERFIL EN USERS SI FALLO LA CREACION DEL PERFIL
@@ -252,13 +254,19 @@ async def get_all_users(_token=Depends(authenticate_admin_token)):
 
 @app.get('/courses/ping')
 async def business_ping():
-    response = requests.get(BUSINESS_BACKEND_URL + '/ping')
+    response = requests.get(
+        BUSINESS_BACKEND_URL + '/ping',
+        headers={'Authorization': BUSINESS_API_KEY}
+    )
     return response.json()
 
 
 @app.get('/courses/{course_id}', dependencies=[Depends(authenticate_token)])
-async def get_course(request: Request, course_id: str):
-    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f"/{course_id}")
+async def get_course(course_id: str):
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f"/{course_id}",
+        headers={'Authorization': BUSINESS_API_KEY}
+    )
     response_json = response.json()
 
     if response.status_code != 200:
@@ -272,7 +280,11 @@ async def get_course(request: Request, course_id: str):
 async def create_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['email'] = current_user.email
-    response = requests.post(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create', json=request_json)
+    response = requests.post(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create',
+        json=request_json,
+        headers={'Authorization': BUSINESS_API_KEY}
+    )
     response_json = response.json()
 
     if response.status_code != 200:
@@ -286,7 +298,11 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
 async def update_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['email'] = current_user.email
-    response = requests.put(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/update', json=request_json)
+    response = requests.put(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + '/update',
+        json=request_json,
+        headers={'Authorization': BUSINESS_API_KEY}
+    )
     response_json = response.json()
 
     if response.status_code != 200:
@@ -299,7 +315,8 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
 @app.get('/search_courses/{filter_type}/{filter_value}')
 async def search_courses(filter_type: str, filter_value: str):
     response = requests.get(
-        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized/{filter_type}/{filter_value}'
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized/{filter_type}/{filter_value}',
+        headers={'Authorization': BUSINESS_API_KEY}
     )
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
@@ -312,7 +329,8 @@ async def create_exam(request: Request, token: str = Depends(authenticate_token)
     request_json['email'] = token.email
     response = requests.post(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create_exam',
-        json=request_json
+        json=request_json,
+        headers={'Authorization': BUSINESS_API_KEY}
     )
     response_json = response.json()
     if response.status_code != 200:
@@ -326,7 +344,8 @@ async def edit_exam(request: Request, token: str = Depends(authenticate_token)):
     request_json['email'] = token.email
     response = requests.put(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/edit_exam',
-        json=request_json
+        json=request_json,
+        headers={'Authorization': BUSINESS_API_KEY}
     )
     response_json = response.json()
     if response.status_code != 200:
@@ -340,7 +359,8 @@ async def publish_exam(request: Request, token: str = Depends(authenticate_token
     request_json['email'] = token.email
     response = requests.post(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/publish_exam',
-        json=request_json
+        json=request_json,
+        headers={'Authorization': BUSINESS_API_KEY}
     )
     response_json = response.json()
     if response.status_code != 200:
@@ -354,7 +374,8 @@ async def grade_exam(request: Request, token: str = Depends(authenticate_token))
     request_json['email'] = token.email
     response = requests.post(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/grade_exam',
-        json=request_json
+        json=request_json,
+        headers={'Authorization': BUSINESS_API_KEY}
     )
     response_json = response.json()
     if response.status_code != 200:
@@ -364,8 +385,14 @@ async def grade_exam(request: Request, token: str = Depends(authenticate_token))
 
 @app.get('/profile_setup')
 async def profile_setup():
-    countries_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries')
-    genres_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/course_genres')
+    countries_response = requests.get(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries',
+        headers={'Authorization': BUSINESS_API_KEY}
+    )
+    genres_response = requests.get(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/course_genres',
+        headers={'Authorization': BUSINESS_API_KEY}
+    )
 
     countries_response_json = countries_response.json()
     genres_response_json = genres_response.json()
@@ -386,13 +413,16 @@ async def profile_setup():
 async def course_setup():
     # TODO: A lot of repeated code from profile_setup
     countries_response = requests.get(
-        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries'
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries',
+        headers={'Authorization': BUSINESS_API_KEY}
     )
     genres_response = requests.get(
-        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/course_genres'
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/course_genres',
+        headers={'Authorization': BUSINESS_API_KEY}
     )
     subscriptions_response = requests.get(
-        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/subscription_types'
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/subscription_types',
+        headers={'Authorization': BUSINESS_API_KEY}
     )
 
     countries_response_json = countries_response.json()
@@ -417,12 +447,13 @@ async def course_setup():
 
 
 @app.put('/update_profile')
-async def udpate_profile(request: Request, current_user: dict = Depends(get_current_user)):
+async def update_profile(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['email'] = current_user.email
     response = requests.post(
         BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/update',
-        json=request_json
+        json=request_json,
+        headers={'Authorization': BUSINESS_API_KEY}
     )
     response_json = response.json()
     if response.status_code != 200 or response_json['status'] == 'error':
@@ -434,7 +465,9 @@ async def udpate_profile(request: Request, current_user: dict = Depends(get_curr
 async def get_profile(profile_email: str, token_data=Depends(authenticate_token)):
     privilege: str = 'admin' if token_data.is_admin else 'user'
     response = requests.get(
-        BUSINESS_BACKEND_URL + PROFILES_PREFIX + f"/{token_data.email}/{privilege}/{profile_email}"
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX +
+        f"/{token_data.email}/{privilege}/{profile_email}",
+        headers={'Authorization': BUSINESS_API_KEY}
     )
     response_json = response.json()
     if response.status_code != 200 or response_json['status'] == 'error':
