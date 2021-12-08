@@ -73,44 +73,6 @@ def test_update_course(mock_update_course):
 
 
 @patch('main.requests.get')
-def test_search_course_by_filter(mock_search_course_by_filter):
-    mock_search_course_by_filter.return_value = MagicMock(status_code=200)
-    mock_search_course_by_filter.return_value.json.return_value = {
-        'status': 'ok',
-        'courses': [
-            {'id': 1, 'title': 'Course 1', 'type': 'Programming', 'subscription_type': 'Silver'},
-        ]
-    }
-
-    response = client.get('/search_courses/type/Programming')
-
-    response_data = response.json()
-
-    assert response.status_code != 400
-    assert response.status_code == 200
-    assert response_data['status'] == 'ok'
-    assert response_data['courses'][0]['title'] == 'Course 1'
-    assert response_data['courses'][0]['type'] == 'Programming'
-
-    mock_search_course_by_filter.return_value.json.return_value = {
-        'status': 'ok',
-        'courses': [
-            {'id': 2, 'title': 'Course 2', 'type': 'Cooking', 'subscription_type': 'Free'},
-        ]
-    }
-
-    response = client.get('/search_courses/subscription_type/Free')
-
-    response_data = response.json()
-
-    assert response.status_code != 400
-    assert response.status_code == 200
-    assert response_data['status'] == 'ok'
-    assert response_data['courses'][0]['title'] == 'Course 2'
-    assert response_data['courses'][0]['subscription_type'] == 'Free'
-
-
-@patch('main.requests.get')
 def test_search_course(mock_search_course):
     mock_search_course.return_value = MagicMock(status_code=200)
     mock_search_course.return_value.json.return_value = {
@@ -120,7 +82,7 @@ def test_search_course(mock_search_course):
         ]
     }
 
-    response = client.get('/courses/search/Programming/Silver')
+    response = client.get('/search_courses/Programming/Silver')
 
     response_data = response.json()
 
@@ -138,7 +100,7 @@ def test_search_course(mock_search_course):
         ]
     }
 
-    response = client.get('/courses/search/Cooking/Free')
+    response = client.get('/search_courses/Cooking/Free')
 
     response_data = response.json()
 

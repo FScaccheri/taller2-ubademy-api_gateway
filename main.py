@@ -321,17 +321,7 @@ async def get_course_exam(
     return response_json
 
 
-@app.get('/search_courses/{filter_type}/{filter_value}')
-async def search_courses_by_filter_type(filter_type: str, filter_value: str):
-    response = requests.get(
-        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized/{filter_type}/{filter_value}'
-    )
-    if response.status_code != 200:
-        return public_status_messages.get('error_unexpected')
-    return response.json()
-
-
-@app.get('/courses/search/{course_type}/{subscription_type}',
+@app.get('/search_courses/{course_type}/{subscription_type}',
          dependencies=[Depends(get_current_user)])
 async def search_courses(course_type: str, subscription_type: str):
     response = requests.get(
