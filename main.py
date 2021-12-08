@@ -349,7 +349,7 @@ async def create_exam(request: Request, token: str = Depends(authenticate_token)
 async def edit_exam(request: Request, token: str = Depends(authenticate_token)):
     request_json = await request.json()
     request_json['email'] = token.email
-    response = requests.put(
+    response = requests.post(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/edit_exam',
         json=request_json
     )
