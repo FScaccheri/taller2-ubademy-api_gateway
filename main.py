@@ -194,6 +194,17 @@ async def oauth_login(request: Request):
         return public_status_messages.get('error_unexpected')
     users_response_json = users_response.json()
 
+    if users_response_json['status'] == 'ok' and users_response['created']:
+        profile_json = {
+            'email': request_email,
+        }
+        profile_response = requests.post(
+            BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/create',
+            json=profile_json
+        )
+        if profile_response.status_code != 200:
+            return public_status_messages.get('error_unexpected')
+
     # Creo el token
     access_token_expires = timedelta(minutes=OAUTH_ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
