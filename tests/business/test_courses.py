@@ -82,7 +82,7 @@ def test_search_course(mock_search_course):
         ]
     }
 
-    response = client.get('/search_courses/type/Programming')
+    response = client.get('/search_courses/Programming/Silver')
 
     response_data = response.json()
 
@@ -91,6 +91,7 @@ def test_search_course(mock_search_course):
     assert response_data['status'] == 'ok'
     assert response_data['courses'][0]['title'] == 'Course 1'
     assert response_data['courses'][0]['type'] == 'Programming'
+    assert response_data['courses'][0]['subscription_type'] == 'Silver'
 
     mock_search_course.return_value.json.return_value = {
         'status': 'ok',
@@ -99,7 +100,7 @@ def test_search_course(mock_search_course):
         ]
     }
 
-    response = client.get('/search_courses/subscription_type/Free')
+    response = client.get('/search_courses/Cooking/Free')
 
     response_data = response.json()
 
@@ -107,6 +108,7 @@ def test_search_course(mock_search_course):
     assert response.status_code == 200
     assert response_data['status'] == 'ok'
     assert response_data['courses'][0]['title'] == 'Course 2'
+    assert response_data['courses'][0]['type'] == 'Cooking'
     assert response_data['courses'][0]['subscription_type'] == 'Free'
 
 
