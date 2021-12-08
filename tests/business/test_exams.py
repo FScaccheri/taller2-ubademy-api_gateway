@@ -45,7 +45,7 @@ def test_failed_create_exam(mock_create_exam):
     assert 'message' in response_data
 
 
-@patch('main.requests.put')
+@patch('main.requests.post')
 def test_edit_exam(mock_edit_exam):
     mock_edit_exam.return_value = MagicMock(status_code=200)
     mock_edit_exam.return_value.json.return_value = {
@@ -67,7 +67,7 @@ def test_edit_exam(mock_edit_exam):
     assert response_data['status'] == 'ok'
 
 
-@patch('main.requests.put')
+@patch('main.requests.post')
 def test_failed_edit_exam(mock_edit_exam):
     mock_edit_exam.return_value = MagicMock(status_code=200)
     mock_edit_exam.return_value.json.return_value = {
@@ -250,3 +250,20 @@ def test_failed_complete_exam(mock_complete_exam):
     assert response_data['status'] == 'error'
     assert 'message' in response_data
     assert response_data['message'] == 'wrong answers amount'
+
+
+@patch('main.requests.get')
+def test_get_student_exam(mock_student_exam):
+    mock_student_exam.return_value = MagicMock(status_code=200)
+    mock_student_exam.return_value.json.return_value = {
+        'status': 'ok',
+        'exam': {'name': 'First exam', 'questions': 10, 'mark': 10}
+    }
+
+    response = client.get('/courses/courseId12345/exam/First exam/completed_exam/student@mail.com')
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+    assert 'exam' in response_data

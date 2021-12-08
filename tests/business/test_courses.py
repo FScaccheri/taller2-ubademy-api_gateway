@@ -82,7 +82,7 @@ def test_search_course(mock_search_course):
         ]
     }
 
-    response = client.get('/search_courses/type/Programming')
+    response = client.get('/search_courses/Programming/Silver')
 
     response_data = response.json()
 
@@ -91,6 +91,7 @@ def test_search_course(mock_search_course):
     assert response_data['status'] == 'ok'
     assert response_data['courses'][0]['title'] == 'Course 1'
     assert response_data['courses'][0]['type'] == 'Programming'
+    assert response_data['courses'][0]['subscription_type'] == 'Silver'
 
     mock_search_course.return_value.json.return_value = {
         'status': 'ok',
@@ -99,7 +100,7 @@ def test_search_course(mock_search_course):
         ]
     }
 
-    response = client.get('/search_courses/subscription_type/Free')
+    response = client.get('/search_courses/Cooking/Free')
 
     response_data = response.json()
 
@@ -107,6 +108,7 @@ def test_search_course(mock_search_course):
     assert response.status_code == 200
     assert response_data['status'] == 'ok'
     assert response_data['courses'][0]['title'] == 'Course 2'
+    assert response_data['courses'][0]['type'] == 'Cooking'
     assert response_data['courses'][0]['subscription_type'] == 'Free'
 
 
@@ -131,6 +133,27 @@ def test_course_students(mock_course_students):
     assert response_data['status'] == 'ok'
     assert 'students' in response_data
     assert len(response_data['students']) == 4
+
+
+@patch('main.requests.get')
+def test_course_exam_students(mock_course_exam_students):
+    mock_course_exam_students.return_value = MagicMock(status_code=200)
+    mock_course_exam_students.return_value.json.return_value = {
+        'status': 'ok',
+        'students': [
+            'student2@mail.com',
+            'student5@mail.com'
+        ]
+    }
+
+    response = client.get('/courses/courseId12345/Primer parcial/students')
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+    assert 'students' in response_data
+    assert len(response_data['students']) == 2
 
 
 @patch('main.requests.get')
@@ -193,3 +216,35 @@ def test_get_course_exam(mock_course_exam):
     assert response.status_code == 200
     assert response_data['status'] == 'ok'
     assert 'exam' in response_data
+
+
+@patch('main.requests.post')
+def test_course_subscription(mock_course_subscription):
+    mock_course_subscription.return_value = MagicMock(status_code=200)
+    mock_course_subscription.return_value.json.return_value = {'status': 'ok'}
+
+    response = client.post('/courses/subscribe', json={
+        'course_id': 'someCourseId12345',
+        'user_email': 'test@mail.com'
+    })
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+
+
+@patch('main.requests.post')
+def test_course_unsubscription(mock_course_unsubscription):
+    mock_course_unsubscription.return_value = MagicMock(status_code=200)
+    mock_course_unsubscription.return_value.json.return_value = {'status': 'ok'}
+
+    response = client.post('/courses/unsubscribe', json={
+        'course_id': 'someCourseId12345',
+        'user_email': 'test@mail.com'
+    })
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
