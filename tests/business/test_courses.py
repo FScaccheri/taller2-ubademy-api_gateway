@@ -248,3 +248,25 @@ def test_course_unsubscription(mock_course_unsubscription):
     assert response.status_code != 400
     assert response.status_code == 200
     assert response_data['status'] == 'ok'
+
+
+@patch('main.requests.get')
+def test_get_passing_courses(mock_passing_courses):
+    mock_passing_courses.return_value = MagicMock(status_code=200)
+    mock_passing_courses.return_value.json.return_value = {
+        'status': 'ok',
+        'courses': [
+            'Curso de Python',
+            'Curso de C',
+            'Curso de pasteleria',
+        ]
+    }
+
+    response = client.get('/courses/passing')
+    response_data = response.json()
+
+    assert response.status_code != 400
+    assert response.status_code == 200
+    assert response_data['status'] == 'ok'
+    assert 'courses' in response_data
+    assert len(response_data['courses']) == 3
