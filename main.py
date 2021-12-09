@@ -26,6 +26,7 @@ OAUTH_ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
 
 USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL', 'http://0.0.0.0:8001')
 BUSINESS_BACKEND_URL = os.environ.get('BUSINESS_BACKEND_URL', 'http://0.0.0.0:8002')
+PAYMENTS_BACKEND_URL = os.environ.get('PAYMENTS_BACKEND_URL', 'http://0.0.0.0:8003')
 GOOGLE_OAUTH_URL = 'https://www.googleapis.com/oauth2/v3'
 
 COURSES_PREFIX = '/courses'
@@ -557,6 +558,32 @@ async def get_profile(profile_email: str, token_data=Depends(authenticate_token)
 
     return response_json
 
+#SUBSCRIPTION ENDPOINTS
+@app.post('/modify_subscription')
+async def modify_subscription(request: Request, current_user: dict = Depends(get_current_user)):
+    request_json = await request.json()#Should have the new subscription wanted(Silver, Gold, Platinum)
+    request_json['email'] = current_user.email
+    response = requests.post(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/modify_subscription',
+        json=request_json
+    )
+    response_json = response.json()
+    if response.status_code != 200 or response_json['status'] == 'error':
+        return {"status": "error", "message": response_json["message"]}
+    return response_json
+
+@app.post('/pay_subscription')
+async def pay_subscription(request: Request, current_user: dict = Depends(get_current_user)):
+    request_json = await request.json()#Should have the new subscription wanted(Silver, Gold, Platinum)
+    request_json['email'] = current_user.email
+    response = requests.post(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/pay_subscription',
+        json=request_json
+    )
+    response_json = response.json()
+    if response.status_code != 200 or response_json['status'] == 'error':
+        return {"status": "error", "message": response_json["message"]}
+    return response_json
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
