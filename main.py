@@ -271,6 +271,7 @@ async def business_ping():
 
 @app.get('/courses/{course_id}')
 async def get_course(request: Request, course_id: str, current_user: dict = Depends(get_current_user)):
+
     response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f"/{course_id}/{current_user.email}")
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
@@ -558,7 +559,8 @@ async def get_profile(profile_email: str, token_data=Depends(authenticate_token)
 
     return response_json
 
-#SUBSCRIPTION ENDPOINTS
+
+# SUBSCRIPTION ENDPOINTS
 @app.post('/modify_subscription')
 async def modify_subscription(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()#Should have the new subscription wanted(Silver, Gold, Platinum)
@@ -572,6 +574,7 @@ async def modify_subscription(request: Request, current_user: dict = Depends(get
         return {"status": "error", "message": response_json["message"]}
     return response_json
 
+
 @app.post('/pay_subscription')
 async def pay_subscription(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()#Should have the new subscription wanted(Silver, Gold, Platinum)
@@ -584,6 +587,18 @@ async def pay_subscription(request: Request, current_user: dict = Depends(get_cu
     if response.status_code != 200 or response_json['status'] == 'error':
         return {"status": "error", "message": response_json["message"]}
     return response_json
+
+
+@app.get('/courses/passing/')
+async def get_passing_courses(current_user=Depends(get_current_user)):
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/passing_courses/{current_user.email}'
+    )
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+
+    return response.json()
+
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
