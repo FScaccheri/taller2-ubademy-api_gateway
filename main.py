@@ -313,7 +313,7 @@ async def subscribe_to_course(request: Request, current_user: dict = Depends(get
     request_json = await request.json()
     request_json['user_email'] = current_user.email
     response = requests.post(
-        BUSINESS_BACKEND_URL + COURSES_PREFIX + '/subscribe_to_course',
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/subscribe_to_course',
         json=request_json
     )
 
