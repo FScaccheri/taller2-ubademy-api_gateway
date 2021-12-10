@@ -26,6 +26,7 @@ OAUTH_ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
 
 USERS_BACKEND_URL = os.environ.get('USERS_BACKEND_URL', 'http://0.0.0.0:8001')
 BUSINESS_BACKEND_URL = os.environ.get('BUSINESS_BACKEND_URL', 'http://0.0.0.0:8002')
+PAYMENTS_BACKEND_URL = os.environ.get('PAYMENTS_BACKEND_URL', 'http://0.0.0.0:8003')
 GOOGLE_OAUTH_URL = 'https://www.googleapis.com/oauth2/v3'
 
 COURSES_PREFIX = '/courses'
@@ -122,9 +123,12 @@ async def login(request: Request):
     # The documentation uses data instead of json but it is not updated
     request_json = await request.json()
     response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+
     response_json = response.json()
-    if response.status_code != 200 or response_json['status'] == 'error':
-        return public_status_messages.get('failed_authentication')
+    if response_json['status'] == 'error':
+        return response_json
 
     is_biometric = request_json.get('biometric', None)
     access_token_expires = None if is_biometric else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -141,9 +145,9 @@ async def login(request: Request):
 @app.post('/sign_up')
 async def sign_up(request: Request):
     response = requests.post(USERS_BACKEND_URL + '/create/', json=await request.json())
-    response_json = response.json()
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
+    response_json = response.json()
     if response_json['status'] == 'error':
         return response_json
     # Creo el perfil
@@ -154,10 +158,10 @@ async def sign_up(request: Request):
         BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/create',
         json=profile_json
     )
-    profile_response_json = profile_response.json()
     # TODO: ELIMINAR EL PERFIL EN USERS SI FALLO LA CREACION DEL PERFIL
     if profile_response.status_code != 200:
         return public_status_messages.get('error_unexpected')
+    profile_response_json = profile_response.json()
     if profile_response_json['status'] == 'error':
         return profile_response_json
     # Creo el token
@@ -194,6 +198,17 @@ async def oauth_login(request: Request):
         return public_status_messages.get('error_unexpected')
     users_response_json = users_response.json()
 
+    if users_response_json['status'] == 'ok' and users_response['created']:
+        profile_json = {
+            'email': request_email,
+        }
+        profile_response = requests.post(
+            BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/create',
+            json=profile_json
+        )
+        if profile_response.status_code != 200:
+            return public_status_messages.get('error_unexpected')
+
     # Creo el token
     access_token_expires = timedelta(minutes=OAUTH_ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
@@ -218,9 +233,12 @@ async def users_count():
 async def admin_login(request: Request):
     request_json = await request.json()
     response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
     response_json = response.json()
-    if (response.status_code != 200 or response_json['status'] == 'error'):
-        return public_status_messages.get('failed_authentication')
+
+    if response_json['status'] == 'error':
+        return response_json
 
     access_token_data = {
         'sub': request_json['email'],
@@ -241,23 +259,17 @@ async def admin_login(request: Request):
 @app.post('/admin_register')
 async def admin_register(request: Request, _token=Depends(authenticate_admin_token)):
     response = requests.post(USERS_BACKEND_URL + '/admin_create/', json=await request.json())
-    response_json = response.json()
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
-    if response_json['status'] == 'error':
-        return response_json
-    return {
-        **response_json
-    }
+    return response.json()
 
 
 @app.get('/get_all_users')
 async def get_all_users(_token=Depends(authenticate_admin_token)):
     response = requests.get(USERS_BACKEND_URL + '/users_list')
-    response_json = response.json()
-    if response.status_code != 200 or response_json['status'] == 'error':
-        return public_status_messages.get('users_list_error')
-    return response_json
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    return response.json()
 
 # BUSINESS BACKEND
 
@@ -268,16 +280,15 @@ async def business_ping():
     return response.json()
 
 
-@app.get('/courses/{course_id}', dependencies=[Depends(authenticate_token)])
-async def get_course(request: Request, course_id: str):
-    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f"/{course_id}")
+@app.get('/courses/{course_id}')
+async def get_course(request: Request, course_id: str, token_data=Depends(authenticate_token)):
+    # TODO: Agregar el current_user.email al final del url como url param
+    privilege: str = 'admin' if token_data.is_admin else 'user'
+    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f"/{course_id}/{token_data.email}/{privilege}")
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
 
-    response_json = response.json()
-    if response_json['status'] == 'error':
-        return public_status_messages.get(response_json['message'])
-    return response_json
+    return response.json()
 
 
 @app.post('/courses/create_course')
@@ -288,10 +299,7 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
 
-    response_json = response.json()
-    if response_json['status'] == 'error':
-        return public_status_messages.get(response_json['message'])
-    return response_json
+    return response.json()
 
 
 @app.put('/courses/update_course')
@@ -302,10 +310,7 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
 
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
-    response_json = response.json()
-    if response_json['status'] == 'error':
-        return public_status_messages.get(response_json['message'])
-    return response_json
+    return response.json()
 
 
 @app.post('/courses/subscribe')
@@ -343,8 +348,7 @@ async def course_students(course_id: str):
     )
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
-    response_json = response.json()
-    return response_json
+    return response.json()
 
 
 @app.get('/courses/{course_id}/{exam_name}/students')
@@ -357,8 +361,7 @@ async def course_exam_students(course_id: str,
     )
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
-    response_json = response.json()
-    return response_json
+    return response.json()
 
 
 @app.get('/courses/{course_id}/exams', dependencies=[Depends(get_current_user)])
@@ -368,8 +371,7 @@ async def course_exams(course_id: str):
     )
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
-    response_json = response.json()
-    return response_json
+    return response.json()
 
 
 @app.get('/courses/{course_id}/students_exams/{exam_filter}')
@@ -380,8 +382,7 @@ async def student_exams(course_id: str, exam_filter: str, current_user=Depends(g
     )
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
-    response_json = response.json()
-    return response_json
+    return response.json()
 
 
 @app.get('/courses/{course_id}/exam/{exam_name}/{exam_filter}/{student_email}')
@@ -395,14 +396,14 @@ async def get_course_exam(
     )
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
-    response_json = response.json()
-    return response_json
+    return response.json()
 
 
-@app.get('/search_courses/{filter_type}/{filter_value}')
-async def search_courses(filter_type: str, filter_value: str):
+@app.get('/search_courses/{course_type}/{subscription_type}',
+         dependencies=[Depends(get_current_user)])
+async def search_courses(course_type: str, subscription_type: str):
     response = requests.get(
-        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized/{filter_type}/{filter_value}'
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized/{course_type}/{subscription_type}'
     )
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
@@ -491,10 +492,11 @@ async def profile_setup():
     countries_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries')
     genres_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/course_genres')
 
-    countries_response_json = countries_response.json()
-    genres_response_json = genres_response.json()
     if countries_response.status_code != 200 or genres_response.status_code != 200:
         return public_status_messages.get('error_unexpected')
+
+    countries_response_json = countries_response.json()
+    genres_response_json = genres_response.json()
     if countries_response_json['status'] == 'error':
         return public_status_messages.get('unavailable_countries')
     if genres_response_json['status'] == 'error':
@@ -519,13 +521,15 @@ async def course_setup():
         BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/subscription_types'
     )
 
-    countries_response_json = countries_response.json()
-    genres_response_json = genres_response.json()
-    subscriptions_response_json = subscriptions_response.json()
     if countries_response.status_code != 200 \
        or genres_response.status_code != 200 \
        or subscriptions_response.status_code != 200:
         return public_status_messages.get('error_unexpected')
+
+    countries_response_json = countries_response.json()
+    genres_response_json = genres_response.json()
+    subscriptions_response_json = subscriptions_response.json()
+
     if countries_response_json['status'] == 'error':
         return public_status_messages.get('unavailable_countries')
     if genres_response_json['status'] == 'error':
@@ -548,10 +552,10 @@ async def udpate_profile(request: Request, current_user: dict = Depends(get_curr
         BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/update',
         json=request_json
     )
-    response_json = response.json()
-    if response.status_code != 200 or response_json['status'] == 'error':
-        return public_status_messages.get('profile_update_error')
-    return public_status_messages.get('profile_update_success')
+
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    return response.json()
 
 
 @app.get('/profile/{profile_email}')
@@ -560,10 +564,37 @@ async def get_profile(profile_email: str, token_data=Depends(authenticate_token)
     response = requests.get(
         BUSINESS_BACKEND_URL + PROFILES_PREFIX + f"/{token_data.email}/{privilege}/{profile_email}"
     )
-    response_json = response.json()
-    if response.status_code != 200 or response_json['status'] == 'error':
+    if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
 
+    return response.json()
+
+
+# SUBSCRIPTION ENDPOINTS
+@app.post('/modify_subscription')
+async def modify_subscription(request: Request, current_user: dict = Depends(get_current_user)):
+    request_json = await request.json()#Should have the new subscription wanted(Silver, Gold, Platinum)
+    request_json['email'] = current_user.email
+    response = requests.post(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/modify_subscription',
+        json=request_json
+    )
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    return response.json()
+
+
+@app.post('/pay_subscription')
+async def pay_subscription(request: Request, current_user: dict = Depends(get_current_user)):
+    request_json = await request.json()#Should have the new subscription wanted(Silver, Gold, Platinum)
+    request_json['email'] = current_user.email
+    response = requests.post(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/pay_subscription',
+        json=request_json
+    )
+    response_json = response.json()
+    if response.status_code != 200 or response_json['status'] == 'error':
+        return {"status": "error", "message": response_json["message"]}
     return response_json
 
 
@@ -573,6 +604,15 @@ async def my_courses(request: Request, current_user: dict = Depends(get_current_
     #request_json['email'] = current_user.email
     response = requests.get(
         BUSINESS_BACKEND_URL + PROFILES_PREFIX + f'/my_courses/{current_user.email}')
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    return response.json()
+
+@app.get('/courses/passing/')
+async def get_passing_courses(current_user=Depends(get_current_user)):
+    response = requests.get(
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/passing_courses/{current_user.email}'
+    )
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
     return response.json()
