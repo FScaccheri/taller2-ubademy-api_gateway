@@ -481,7 +481,7 @@ async def complete_exam(request: Request, current_user: str = Depends(get_curren
 @app.post('/courses/add_collaborator')
 async def complete_exam(request: Request, current_user: str = Depends(get_current_user)):
     request_json = await request.json()
-    request_json['email'] = current_user.email
+    request_json['user_email'] = current_user.email
     response = requests.post(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/add_collaborator',
         json=request_json
