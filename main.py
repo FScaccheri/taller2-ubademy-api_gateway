@@ -270,9 +270,10 @@ async def business_ping():
 
 
 @app.get('/courses/{course_id}')
-async def get_course(request: Request, course_id: str, current_user: dict = Depends(get_current_user)):
+async def get_course(request: Request, course_id: str, token_data=Depends(authenticate_token)):
     # TODO: Agregar el current_user.email al final del url como url param
-    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f"/{course_id}")
+    privilege: str = 'admin' if token_data.is_admin else 'user'
+    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f"/{course_id}/{token_data.email}/{privilege}")
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
 
