@@ -327,7 +327,7 @@ async def unsubscribe_to_course(request: Request, current_user: dict = Depends(g
     request_json = await request.json()
     request_json['user_email'] = current_user.email
     response = requests.post(
-        BUSINESS_BACKEND_URL + COURSES_PREFIX + '/unsubscribe_from_course',
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/unsubscribe_from_course',
         json=request_json
     )
 
@@ -412,7 +412,7 @@ async def search_courses(filter_type: str, filter_value: str):
 @app.post('/courses/create_exam')
 async def create_exam(request: Request, token: str = Depends(authenticate_token)):
     request_json = await request.json()
-    request_json['email'] = token.email
+    request_json['exam_creator_email'] = token.email
     response = requests.post(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create_exam',
         json=request_json
@@ -440,7 +440,7 @@ async def edit_exam(request: Request, token: str = Depends(authenticate_token)):
 @app.post('/courses/publish_exam')
 async def publish_exam(request: Request, token: str = Depends(authenticate_token)):
     request_json = await request.json()
-    request_json['email'] = token.email
+    request_json['exam_creator_email'] = token.email
     response = requests.post(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/publish_exam',
         json=request_json
@@ -454,7 +454,7 @@ async def publish_exam(request: Request, token: str = Depends(authenticate_token
 @app.post('/courses/grade_exam')
 async def grade_exam(request: Request, token: str = Depends(authenticate_token)):
     request_json = await request.json()
-    request_json['email'] = token.email
+    request_json['professor_email'] = token.email
     response = requests.post(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/grade_exam',
         json=request_json
@@ -468,7 +468,7 @@ async def grade_exam(request: Request, token: str = Depends(authenticate_token))
 @app.post('/courses/complete_exam')
 async def complete_exam(request: Request, current_user: str = Depends(get_current_user)):
     request_json = await request.json()
-    request_json['email'] = current_user.email
+    request_json['student_email'] = current_user.email
     response = requests.post(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/complete_exam',
         json=request_json
