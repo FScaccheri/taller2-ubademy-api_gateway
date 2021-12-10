@@ -249,12 +249,7 @@ async def admin_register(request: Request, _token=Depends(authenticate_admin_tok
     response = requests.post(USERS_BACKEND_URL + '/admin_create/', json=await request.json())
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
-    response_json = response.json()
-    if response_json['status'] == 'error':
-        return response_json
-    return {
-        **response_json
-    }
+    return response.json()
 
 
 @app.get('/get_all_users')
@@ -262,10 +257,7 @@ async def get_all_users(_token=Depends(authenticate_admin_token)):
     response = requests.get(USERS_BACKEND_URL + '/users_list')
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
-    response_json = response.json()
-    if response_json['status'] == 'error':
-        return response_json
-    return response_json
+    return response.json()
 
 # BUSINESS BACKEND
 
