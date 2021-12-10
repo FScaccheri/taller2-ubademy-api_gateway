@@ -560,5 +560,19 @@ async def get_profile(profile_email: str, token_data=Depends(authenticate_token)
     return response_json
 
 
+@app.get('/my_courses')
+async def my_courses(request: Request, current_user: dict = Depends(get_current_user)):
+    request_json = await request.json()
+    request_json['email'] = current_user.email
+    response = requests.post(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + f'/my_courses/{current_user.email}',
+        json=request_json
+    )
+    response_json = response.json()
+    if response.status_code != 200 or response_json['status'] == 'error':
+        return public_status_messages.get('profile_get_error')
+    return public_status_messages.get('data_delivered')
+
+
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
