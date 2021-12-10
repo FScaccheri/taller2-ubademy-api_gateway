@@ -474,7 +474,7 @@ async def complete_exam(request: Request, current_user: str = Depends(get_curren
     return response.json()
 
 @app.post('/courses/add_collaborator')
-async def complete_exam(request: Request, current_user: str = Depends(get_current_user)):
+async def add_collaborator(request: Request, current_user: str = Depends(get_current_user)):
     request_json = await request.json()
     request_json['user_email'] = current_user.email
     response = requests.post(
@@ -573,7 +573,7 @@ async def my_courses(request: Request, current_user: dict = Depends(get_current_
     #request_json['email'] = current_user.email
     response = requests.get(
         BUSINESS_BACKEND_URL + PROFILES_PREFIX + f'/my_courses/{current_user.email}')
-    if response.status_code != 200 or response.json()['status'] == 'error':
+    if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
     return response.json()
 
