@@ -600,13 +600,28 @@ async def pay_subscription(request: Request, current_user: dict = Depends(get_cu
 
 @app.get('/my_courses')
 async def my_courses(request: Request, current_user: dict = Depends(get_current_user)):
-    #request_json = await request.json()
-    #request_json['email'] = current_user.email
     response = requests.get(
         BUSINESS_BACKEND_URL + PROFILES_PREFIX + f'/my_courses/{current_user.email}')
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
     return response.json()
+
+@app.get('/course_genres')
+async def course_genres(request: Request, current_user: dict = Depends(get_current_user)):
+    response = requests.get(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + f'/course_genres')
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    return response.json()
+
+@app.get('/subscription_types')
+async def subscription_types(request: Request, current_user: dict = Depends(get_current_user)):
+    response = requests.get(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + f'/subscription_types_names')
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    return response.json()
+
 
 @app.get('/courses/passing')
 async def get_passing_courses(current_user=Depends(get_current_user)):
