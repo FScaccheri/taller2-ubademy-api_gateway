@@ -399,11 +399,13 @@ async def get_course_exam(
     return response.json()
 
 
-@app.get('/search_courses/{course_type}/{subscription_type}',
-         dependencies=[Depends(get_current_user)])
-async def search_courses(course_type: str, subscription_type: str):
+@app.get('/search_courses/{course_type}/{subscription_type}')
+async def search_courses(course_type: str, subscription_type: str, current_user: str = Depends(get_current_user)):
+    is_admin_string = "false"
+    if (current_user.is_admin):
+        is_admin_string = "true"
     response = requests.get(
-        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized/{course_type}/{subscription_type}'
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized/{course_type}/{subscription_type}/{is_admin_string}'
     )
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
