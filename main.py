@@ -608,7 +608,7 @@ async def my_courses(request: Request, current_user: dict = Depends(get_current_
         return public_status_messages.get('error_unexpected')
     return response.json()
 
-@app.get('/courses/passing/')
+@app.get('/courses/passing')
 async def get_passing_courses(current_user=Depends(get_current_user)):
     response = requests.get(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/passing_courses/{current_user.email}'
