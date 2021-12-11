@@ -364,10 +364,10 @@ async def course_exam_students(course_id: str,
     return response.json()
 
 
-@app.get('/courses/{course_id}/exams/{filter}', dependencies=[Depends(get_current_user)])
-async def course_exams(course_id: str, filter: str):
+@app.get('/courses/{course_id}/exams/{filter}')
+async def course_exams(course_id: str, filter: str, current_user=Depends(get_current_user)):
     response = requests.get(
-        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/exams/{course_id}/{filter}'
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/exams/{course_id}/{filter}/{current_user.email}'
     )
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
