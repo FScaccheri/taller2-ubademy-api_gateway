@@ -198,7 +198,7 @@ async def oauth_login(request: Request):
         return public_status_messages.get('error_unexpected')
     users_response_json = users_response.json()
 
-    if users_response_json['status'] == 'ok' and users_response_json['message'] == 'user successfully registered':
+    if users_response_json['status'] == 'ok' and users_response_json['created']:
         profile_json = {
             'email': request_email,
         }
