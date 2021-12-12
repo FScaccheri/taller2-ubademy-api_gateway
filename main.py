@@ -265,8 +265,11 @@ async def admin_register(request: Request, _token=Depends(authenticate_admin_tok
 
 
 @app.get('/get_all_users')
-async def get_all_users(_token=Depends(authenticate_admin_token)):
-    response = requests.get(USERS_BACKEND_URL + '/users_list')
+async def get_all_users(current_user: dict = Depends(get_current_user)):
+    is_admin = "false"
+    if current_user.is_admin:
+        is_admin = "true"
+    response = requests.get(USERS_BACKEND_URL + f'/users_list/{is_admin}')
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
     return response.json()
@@ -633,6 +636,19 @@ async def get_passing_courses(current_user=Depends(get_current_user)):
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
     return response.json()
+
+@app.post('/change_blocked_status')
+async def pay_subscription(request: Request, current_user: dict = Depends(get_current_user)):
+    request_json = await request.json()#Should have the new subscription wanted(Silver, Gold, Platinum)
+    request_json['is_admin'] = current_user.is_admin
+    response = requests.post(
+        USERS_BACKEND_URL + '/change_blocked_status',
+        json=request_json
+    )
+    response_json = response.json()
+    if response.status_code != 200 or response_json['status'] == 'error':
+        return {"status": "error", "message": response_json["message"]}
+    return response_json
 
 
 if __name__ == '__main__':
