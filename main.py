@@ -130,6 +130,11 @@ async def login(request: Request):
     if response_json['status'] == 'error':
         return response_json
 
+    validate_sub_response = requests.post(BUSINESS_BACKEND_URL + PROFILES_PREFIX + "/validate_subscription", json={"email":request_json["email"]})
+    validate_sub_response_json = validate_sub_response.json()#Ver si tiene sentido chequear error aca.
+                                                             #porque si ya llego aca en teoria el usuario se logeo bien
+    print("VALIDATE SUB RESPONSE: ", validate_sub_response_json)
+
     is_biometric = request_json.get('biometric', None)
     access_token_expires = None if is_biometric else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
