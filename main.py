@@ -637,17 +637,16 @@ async def get_passing_courses(current_user=Depends(get_current_user)):
         return public_status_messages.get('error_unexpected')
     return response.json()
 
-@app.post('/change_blocked_status')
-async def pay_subscription(request: Request, current_user: dict = Depends(get_current_user)):
+@app.post('/change_blocked_status', dependencies=[Depends(authenticate_token)])
+async def change_blocked_status(request: Request):
     request_json = await request.json()#Should have the new subscription wanted(Silver, Gold, Platinum)
-    request_json['is_admin'] = current_user.is_admin
     response = requests.post(
         USERS_BACKEND_URL + '/change_blocked_status',
         json=request_json
     )
     response_json = response.json()
-    if response.status_code != 200 or response_json['status'] == 'error':
-        return {"status": "error", "message": response_json["message"]}
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
     return response_json
 
 
