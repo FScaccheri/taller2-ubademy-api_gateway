@@ -656,7 +656,7 @@ async def change_blocked_status(request: Request):
 
 
 @app.post('/grade_course')
-async def change_blocked_status(request: Request, current_user=Depends(get_current_user)):
+async def grade_course(request: Request, current_user=Depends(get_current_user)):
     request_json = await request.json()
     request_json['user_email'] = current_user.email
     response = requests.post(
@@ -669,7 +669,7 @@ async def change_blocked_status(request: Request, current_user=Depends(get_curre
     return response_json
 
 @app.get('/student_gradings/{id}', dependencies=[Depends(authenticate_token)])
-async def get_passing_courses(id: str):
+async def get_student_gradings(id: str):
     response = requests.get(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/student_gradings/{id}'
     )
