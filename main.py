@@ -677,5 +677,14 @@ async def get_student_gradings(id: str):
         return public_status_messages.get('error_unexpected')
     return response.json()
 
+@app.get('/users_metrics/{id}', dependencies=[Depends(authenticate_admin_token)])
+async def users_metrics():
+    response = requests.get(
+        USERS_BACKEND_URL + f'/users_metrics'
+    )
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    return response.json()
+
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
