@@ -677,7 +677,7 @@ async def get_student_gradings(id: str):
         return public_status_messages.get('error_unexpected')
     return response.json()
 
-@app.get('/users_metrics/{id}', dependencies=[Depends(authenticate_admin_token)])
+@app.get('/users_metrics', dependencies=[Depends(authenticate_admin_token)])
 async def users_metrics():
     response = requests.get(
         USERS_BACKEND_URL + f'/users_metrics'
