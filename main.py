@@ -1,3 +1,4 @@
+import os
 import uvicorn
 import requests
 
@@ -9,7 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from jose import jwt, JWTError, ExpiredSignatureError
-import os
 
 from configuration.status_messages import public_status_messages
 from models.tokens import Token, TokenData
@@ -18,6 +18,7 @@ from models.users import CurrentUser
 from exceptions.expired_credentials_exception import ExpiredCredentialsException
 from exceptions.invalid_credentials_exception import InvalidCredentialsException
 
+from utils.logger import Logger
 
 SECRET_KEY = '944211eb42c3b243739503a1d36225a91317cffe7d1b445add87920b380ddae5'
 ALGORITHM = 'HS256'
@@ -45,6 +46,8 @@ app.add_middleware(
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='login')
+
+logger = Logger(os.environ.get('NEWRELIC_API_KEY'))
 
 
 @app.exception_handler(InvalidCredentialsException)
@@ -103,6 +106,7 @@ async def get_current_user(token_data: TokenData = Depends(authenticate_token)):
 
 @app.get('/')
 async def home():
+    logger.info("Request received at '/'")
     return public_status_messages.get('hello_api_gateway')
 
 
