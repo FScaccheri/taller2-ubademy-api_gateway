@@ -6,7 +6,7 @@ Para el desarrollo del producto se utilizó la arquitectura de microservicios. A
 &nbsp;&nbsp;&nbsp;&nbsp;Al ser el orquestrador y encargarse de la integridad de la aplicación manejando las requests que deben ser enviadas, es necesario que no puedan conectar con estas entidades otros hosts que no sean el api gateway. Es por esto que se implementó como medida de seguridad las api keys, que permiten asegurar dentro de cada servicio que quien lo contacta es una entidad autorizada, y de esa forma no se amenace la integridad de la aplicación.
 
 # Users
-&nbsp;&nbsp;&nbsp;&nbsp;Este servicio es quien se encarga de las operaciones de registro y login de usuarios, tanto utilizando el método implementado por nosotros como utilizando un método de login federado. Guarda un registro de todos los alumnos de la aplicación, y otorga métricas de momentos de registro y loggeo de los usuarios.
+&nbsp;&nbsp;&nbsp;&nbsp;Este servicio es quien se encarga de las operaciones de registro y login de usuarios, tanto utilizando el método implementado por nosotros como utilizando un método de login federado. Guarda un registro de todos los alumnos de la aplicación, y otorga métricas de momentos de registro y loggeo de los usuarios. Este servicio conecta también con una instancia de base de datos de Postgres, que se encuentra adjuntada a la aplicación en Heroku (donde se encuentran deployados todos los servicios implementados para poder ser accedidos a través de internet), a la que se mandan requests sql para poder persistir de forma apropiada los datos mencionados previamente.
 
 
 # Business
@@ -14,5 +14,8 @@ Para el desarrollo del producto se utilizó la arquitectura de microservicios. A
 
 
 # Payments
-&nbsp;&nbsp;&nbsp;&nbsp;Este es el servicio que implementa todas las funcionalidades relacionadas con el pago por servicios relacionados con la aplicación. Maneja internamente wallets conectadas a una blockchain, y se encarga del pago y cobranza de dinero (en ethereum) para los usuarios.
+&nbsp;&nbsp;&nbsp;&nbsp;Este es el servicio que implementa todas las funcionalidades relacionadas con el pago por servicios relacionados con la aplicación. Maneja internamente wallets conectadas a una blockchain, y se encarga del pago y cobranza de dinero (en ethereum) para los usuarios. Para el caso de payments, también hay interacción entre este y Business.
 
+# Gráfico de interacciones
+Un diagrama que facilita el entendimiento de cómo se relaciona el frontend con el backend, y cómo se relacionan los distintos backends entre sí es el siguiente:  
+![Diagrama de interacciones](images/arquitectura.jpg)
