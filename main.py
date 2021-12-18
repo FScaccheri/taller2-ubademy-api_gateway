@@ -607,11 +607,8 @@ async def pay_subscription(request: Request, current_user: dict = Depends(get_cu
         return {"status": "error", "message": response_json["message"]}
     return response_json
 
-@app.get('/deposits/{email}')
-async def get_deposits(request: Request, email: str, token_data=Depends(authenticate_token)):
-    if not token_data.is_admin:
-        return {"status":"error", "message":"Only admin can list transactions"}
-
+@app.get('/deposits/{email}', dependencies=[Depends(authenticate_admin_token)])#El email es para el filtro. Si es all devuelve todas las transacciones
+async def get_deposits(request: Request, email: str):
     response = requests.get(PAYMENTS_BACKEND_URL + f"/deposits/{email}")
     if response.status_code != 200:
         return public_status_messages.get("error_unexpected")
