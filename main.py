@@ -884,14 +884,13 @@ async def send_message(request: Request, current_user: dict = Depends(get_curren
     logger.info(f"Received POST request at /send_message with body {request_json}")
 
     response = requests.post(
-        USERS_BACKEND_URL + f'/send_message'
+        USERS_BACKEND_URL + '/send_message',
+        json=request_json
     )
 
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
     return response.json()
-
-
 
 
 if __name__ == '__main__':
