@@ -881,6 +881,7 @@ async def users_metrics():
 async def send_message(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['email'] = current_user.email
+    logger.info(f"Received POST request at /send_message with body {request_json}")
 
     response = requests.post(
         USERS_BACKEND_URL + f'/send_message'
