@@ -29,7 +29,7 @@ class User(Base):
     registration_date = Column(DateTime(), nullable = False)
     last_login_date = Column(DateTime(), nullable = False
 
-    UPDATEAR CON LA DATA DEL EXPO TOKEN
+    TODO: UPDATEAR CON LA DATA DEL EXPO TOKEN
 
 ```
 
@@ -48,7 +48,7 @@ class Google(Base):
     registration_date = Column(DateTime(), nullable = False)
     last_login_date = Column(DateTime(), nullable = False)
 
-    UPDATEAR CON LA DATA DEL EXPO TOKEN
+    TODO: UPDATEAR CON LA DATA DEL EXPO TOKEN
 
 ```
 
@@ -80,11 +80,46 @@ Como se dijo previamente, las bibliotecas utilizadas por este servicio son:
 
 ### Registro y log in
 
-Como se dijo previamente, 
+&nbsp;&nbsp;&nbsp;&nbsp;Como se dijo previamente, este backend se encarga del registro y login de usuarios, para esto se utiliza una serie de endpoints, unos para el registro y login de un usuario normal, y otro para el registro o login de un usuario que utiliza Google para entrar a la aplicación.  
+&nbsp;&nbsp;&nbsp;&nbsp;Si el usuario quiere tener una cuenta con contraseña manejada por Ubademy, entonces primero deberá registrarse, proporcionando el usuario y contraseña que querrá usar para loguearse las siguientes veces. Si por otro lado quiere registrarse y loguearse utilizando una cuenta de Google, entonces deberá hacer log in en la cuenta de Google para obtener un token, que será validado por Api Gateway, si este es aprobado entonces se le indicará a Users que se quiere loguear un usuario con identidad federada. Si el usuario ya existía entonces simplemente se retorna que este ya existía, sino se guarda en la tabla de usuarios con login federado y se retorna en el mensaje de respuesta que el usuario fue registrado.  
+&nbsp;&nbsp;&nbsp;&nbsp;Es necesario aclarar que un usuario no puede loggearse de las dos formas, sino que debe escoger una. En caso de que tenga una cuenta normal se le negará el acceso con login federado, y en caso de que su cuenta se haya creado por utilizar un login federado no se le permitirá crear una cuenta normal. Esto se realiza haciendo una query en cada tabla según lo necesite el contexto sabiendo así en qué tabla realmente está guardado el usuario.
 
+### Obtención de métricas
+&nbsp;&nbsp;&nbsp;&nbsp;Esta funcionalidad retorna la cantidad total de usuarios de la plataforma, la cantidad de usuarios que se registraron el último día, la cantidad de usuarios bloqueados, y la cantidad de usaurios que se loguearon en la última hora, siempre diviendo seǵun el tipo de login del usuario (excepto en la cantidad de usuarios de la plataforma y la cantidad de usuarios bloqueados). Esta funcionalidad solo debe ser accedida por un administrador, sin embargo, el chequeo necesario es realizado por Api Gateway, quien rebota al usuario si no cumple con los requisitos necesarios.
+
+TODO: AGREGAR INFORMACIÓN SOBRE EL ENVIADO DE MENSAJES
 
 # Business
 
+## Introducción
+&nbsp;&nbsp;&nbsp;&nbsp;El servicio de users fue implementado en Javascript, utilizando Node js. Este servicio se encarga de realizar las operaciones necesarias para que el usuario pueda interactuar con la aplicación de la forma apropiada, es decir, todas las funcionalidades que permiten que un usuario interactúe con cursos y otros usuarios. A continuación se explicará más en detalle las distintas secciones del backend.
+
+## Base de datos
+A diferencia del servicio Users, Business interactúa con una base de datos no relacional de Mongo, hosteada en Atlas. Allí almacena todos los datos necesarios para la funcionalidad general de la app, los cursos creados, los perfiles, los examenes y los pagos realizados.
+
+### Profile
+
+```
+class UserProfile
+    name: string;
+    profile_picture_link: string;
+    email: string;
+    country: string;
+    subscription_type: string;
+    interesting_genres: string[];
+    collaborator_courses: string[];
+    subscribed_courses: string[];
+    passed_courses: string[];
+```
+
+Puede verse que el perfil guarda el nombre del usuario, un link que lleva a su foto de perfil (hosteada en firebase), su email de registro (que es único para cada perfil, no puede repetirse), el país al que pertenece el usuario
+
+### Course
+
+### Exam
+
+
+## Bibliotecas
 
 
 # Payments
