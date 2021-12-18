@@ -28,6 +28,9 @@ class User(Base):
     is_blocked = Column(Boolean(), nullable = False)
     registration_date = Column(DateTime(), nullable = False)
     last_login_date = Column(DateTime(), nullable = False
+
+    UPDATEAR CON LA DATA DEL EXPO TOKEN
+
 ```
 
 &nbsp;&nbsp;&nbsp;&nbsp;Puede verse que un usuario normal almacena el email (que es lo utilizado para identificarlo en la plataforma, puede verse que es la primary key de la tabla, por lo que no puede repetirse), una contraseña hasheada y con sal (para proteger la cuenta del usuario en caso de que se filtren las contraseñas), una contraseña de firebase para que el usuario pueda utilizar correctamente la funcionalidad de chat, y una columna llamada is_blocked, que indica si el usuario se encuentra o no bloqueado de su cuenta y, por lo tanto, si puede acceder a ella o no. Por otro lado, pueden verse las columnas registration_date y last_login_date, que se utilizan para poder calcular métricas de registro y loggeo de usuarios en cierta ventana de tiempo (para que sea simple testear, se decidió tener una ventana de 1 día de registro y 1 hora de login, es decir, serán tomados en cuenta para 
@@ -44,9 +47,32 @@ class Google(Base):
     is_blocked = Column(Boolean(), nullable = False)
     registration_date = Column(DateTime(), nullable = False)
     last_login_date = Column(DateTime(), nullable = False)
+
+    UPDATEAR CON LA DATA DEL EXPO TOKEN
+
 ```
 
-&nbsp;&nbsp;&nbsp;&nbsp;Es evidente que la tabla de usuarios que se loggean con Google es muy similar a la de los usuarios que utilizan nuestro sistema de registro propio, con la diferencia de que estos no tienen contraseña. Esto se debe claramente al hecho de que, al utilizar el loggeo con Google
+&nbsp;&nbsp;&nbsp;&nbsp;Es evidente que la tabla de usuarios que se loggean con Google es muy similar a la de los usuarios que utilizan nuestro sistema de registro propio, con la diferencia de que estos no tienen contraseña. Esto se debe claramente al hecho de que, al utilizar el loggeo con Google, el usuario está utilizando su contraseña de Google para generar el certificado que a nosotros nos indica que es un usuario válido.
+
+
+### Admin
+```
+class Admin(Base):
+    __tablename__ = "admins"
+
+    email = Column(String(database_shared_constants.CONST_EMAIL_LENGTH), primary_key = True)
+    hashed_password = Column(String(database_shared_constants.CONST_HASH_LENGTH), nullable = False)
+    name = Column(String(database_shared_constants.CONST_NAME_LENGTH), nullable = False)
+```
+
+&nbsp;&nbsp;&nbsp;&nbsp;Fue implementado también el usuario de tipo admin, que es un tipo de usuario distinto con permisos que un usuario normal no posee. Puede verse que solo tiene un mail, un nombre y una contraseña (hasheada al igual que en el caso de un usuario normal). Es un usuario de distinta categoría, a pesar de que los mails de los admins no pueden repetirse entre sí, no hay problema si un mail es utilziado para una cuenta normal y de admin. Un admin no tiene las funcionalidades del usuario normal (suscripción, creación de curso, etc.).
+
+## Bibliotecas
+
+Como se dijo previamente, las bibliotecas utilizadas por este servicio son:
+- 
+
+
 
 # Business
 
