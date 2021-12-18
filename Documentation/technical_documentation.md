@@ -112,15 +112,65 @@ class UserProfile
     passed_courses: string[];
 ```
 
-Puede verse que el perfil guarda el nombre del usuario, un link que lleva a su foto de perfil (hosteada en firebase), su email de registro (que es único para cada perfil, no puede repetirse), el país al que pertenece el usuario
+Puede verse que el perfil guarda el nombre del usuario, un link que lleva a su foto de perfil (hosteada en firebase), su email de registro (que es único para cada perfil, no puede repetirse), el país al que pertenece el usuario, los géneros de cursos que le interesan, el tipo de suscripción, los ids de los cursos en los que colabora, los id de los cursos a los que está suscripto, y los ids de los cursos que aprobó. Toda esta información es utilizada para las operaciones normales de los usuarios, como se verá en las siguientes secciones del documento.
 
 ### Course
 
+```
+class Course 
+    creator_email: string;
+    title: string;
+    description: string;
+    total_exams: Number;
+    hashtags: string[];
+    images: string[];
+    videos: Array<Video>;
+    country: string;
+    course_type: string;
+    subscription_type: string;
+    collaborators: string[];
+    students: string[];
+    students_grading: CourseGrading[];
+
+
+interface Video 
+    name: string;
+    url: string;
+
+class CourseGrading 
+    student_email: string;
+    comment: string;
+    grade: Number;
+
+```
+
+Puede verse que el documento de cursos guarda una mayor cantidad de elementos en cada entrada que el perfil, esto se debe a que es utilizada para muchas mas funcionalidades. Estas se analizarán luego, explicando qué entradas de los documentos utilizan para funcionar correctamente.
+
+
 ### Exam
 
+```
+class Exam
+    exam_name: string;
+    questions: string[];
+    students_exams: CompletedExam[];
+    is_published: boolean;
+
+
+class CompletedExam
+    student_email: string;
+    answers: string[];
+    professors_notes: string[];
+    mark: Number;
+```
+
+Al igual que en el caso de los cursos, al utilizarse para una gran cantidad de funcionalidades, se explicarán en detalle los campos mostrados cuando se indique los usos que se les dan.
 
 ## Bibliotecas
 
+Las bibliotecas que se utilizaron para la implementación del backend Business son las siguientes:
+- Mongodb: es una de las bibliotecas de mayor importancia del programa, es utilizada para todas las interacciones realizadas con la base de datos, permite la implementación de todas las funcionalidades que requieren persistencia de datos en disco, por lo que permitió la implementación de la mayoría de los servicios que requiere el usuario de la app.
+- Express: es utilizado para cumplir las funcionalidades de Fastapi y levantar el servidor, es decir, se encarga de generar un servidor que acepta conexiones para hacer pedidos HTTP, y además parsea los mensajes recibidos para mapear los requests HTTP a los endpoints (y por lo tanto funciones e implementaciones) correspondientes.
 
 # Payments
 
