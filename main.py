@@ -156,7 +156,7 @@ async def login(request: Request):
         )
         return public_status_messages.get('error_unexpected')
     validate_sub_response_json = validate_sub_response.json()
-    if validate_sub_response_json['error']:
+    if validate_sub_response_json['status'] == 'error':
         return validate_sub_response_json
 
     logger.info(f"POST at /login validate_sub_response: {validate_sub_response_json}")
