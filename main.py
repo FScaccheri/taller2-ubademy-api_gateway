@@ -233,7 +233,7 @@ async def oauth_login(request: Request):
 
     users_response = requests.post(
         USERS_BACKEND_URL + '/oauth_login',
-        json={'email': request_email}
+        json=request_json
     )
     if users_response.status_code != 200:
         logger.error(
