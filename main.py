@@ -697,5 +697,22 @@ async def users_metrics():
         return public_status_messages.get('error_unexpected')
     return response.json()
 
+
+@app.post('/send_message')
+async def send_message(request: Request, current_user: dict = Depends(get_current_user)):
+    request_json = await request.json()
+    request_json['email'] = current_user.email
+
+    response = requests.get(
+        USERS_BACKEND_URL + f'/send_message'
+    )
+
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    return response.json()
+
+
+
+
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
