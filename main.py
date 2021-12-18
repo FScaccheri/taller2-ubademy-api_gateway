@@ -703,7 +703,7 @@ async def send_message(request: Request, current_user: dict = Depends(get_curren
     request_json = await request.json()
     request_json['email'] = current_user.email
 
-    response = requests.get(
+    response = requests.post(
         USERS_BACKEND_URL + f'/send_message'
     )
 
