@@ -51,8 +51,9 @@ logger = Logger(os.environ.get('NEWRELIC_API_KEY'))
 
 
 @app.exception_handler(InvalidCredentialsException)
-async def invalid_credentials_exception_handler(_request: Request,
+async def invalid_credentials_exception_handler(request: Request,
                                                 _exc: InvalidCredentialsException):
+    logger.info(f"{request.method} at {request.url.path}: invalid credentials exception")
     return JSONResponse(
         status_code=200,
         content=public_status_messages.get('invalid_credentials')
@@ -60,8 +61,9 @@ async def invalid_credentials_exception_handler(_request: Request,
 
 
 @app.exception_handler(ExpiredCredentialsException)
-async def expired_credentials_exception_handler(_request: Request,
+async def expired_credentials_exception_handler(request: Request,
                                                 _exc: ExpiredCredentialsException):
+    logger.info(f"{request.method} at {request.url.path}: expired credentials exception")
     return JSONResponse(
         status_code=200,
         content=public_status_messages.get('expired_credentials')
@@ -106,17 +108,19 @@ async def get_current_user(token_data: TokenData = Depends(authenticate_token)):
 
 @app.get('/')
 async def home():
-    logger.info("Request received at '/'")
+    logger.info("GET request received at '/'")
     return public_status_messages.get('hello_api_gateway')
 
 
 @app.get('/users/me')
 async def read_users_me(current_user: dict = Depends(get_current_user)):
+    logger.info("GET request received at '/users/me'")
     return current_user
 
 
 @app.get('/users/ping', dependencies=[Depends(authenticate_token)])
 async def users_ping():
+    logger.info("GET request received at '/users/ping'")
     response = requests.get(USERS_BACKEND_URL + '/pong')
     return response.json()
 
@@ -126,18 +130,36 @@ async def users_ping():
 async def login(request: Request):
     # The documentation uses data instead of json but it is not updated
     request_json = await request.json()
+    logger.info(f"POST request received at /login with email: {request_json['email']}")
     response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
     if response.status_code != 200:
+        logger.error(
+            f"Error making POST request at {USERS_BACKEND_URL + request.url.path}"
+        )
         return public_status_messages.get('error_unexpected')
 
     response_json = response.json()
     if response_json['status'] == 'error':
         return response_json
 
-    validate_sub_response = requests.post(BUSINESS_BACKEND_URL + PROFILES_PREFIX + "/validate_subscription", json={"email":request_json["email"]})
-    validate_sub_response_json = validate_sub_response.json()#Ver si tiene sentido chequear error aca.
-                                                             #porque si ya llego aca en teoria el usuario se logeo bien
-    print("VALIDATE SUB RESPONSE: ", validate_sub_response_json)
+    validate_sub_response = requests.post(
+        BUSINESS_BACKEND_URL + PROFILES_PREFIX + "/validate_subscription",
+        json={"email": request_json["email"]}
+    )
+
+    # Ver si tiene sentido chequear error aca.
+    # porque si ya llego aca en teoria el usuario se logeo bien
+    if validate_sub_response.status_code != 200:
+        logger.error(
+            f"Error making POST request at "
+            f"{BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/validate_subscription'}"
+        )
+        return public_status_messages.get('error_unexpected')
+    validate_sub_response_json = validate_sub_response.json()
+    if validate_sub_response_json['error']:
+        return validate_sub_response_json
+
+    logger.info(f"POST at /login validate_sub_response: {validate_sub_response_json}")
 
     is_biometric = request_json.get('biometric', None)
     access_token_expires = None if is_biometric else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -153,8 +175,13 @@ async def login(request: Request):
 
 @app.post('/sign_up')
 async def sign_up(request: Request):
-    response = requests.post(USERS_BACKEND_URL + '/create/', json=await request.json())
+    request_json = await request.json()
+    logger.info(f"POST request received at /sign_up with email: {request_json['email']}")
+    response = requests.post(USERS_BACKEND_URL + '/create/', json=request_json)
     if response.status_code != 200:
+        logger.error(
+            f"Error making POST request at {USERS_BACKEND_URL + '/create/'}"
+        )
         return public_status_messages.get('error_unexpected')
     response_json = response.json()
     if response_json['status'] == 'error':
@@ -169,6 +196,9 @@ async def sign_up(request: Request):
     )
     # TODO: ELIMINAR EL PERFIL EN USERS SI FALLO LA CREACION DEL PERFIL
     if profile_response.status_code != 200:
+        logger.error(
+            f"Error making POST request at {BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/create'}"
+        )
         return public_status_messages.get('error_unexpected')
     profile_response_json = profile_response.json()
     if profile_response_json['status'] == 'error':
@@ -189,9 +219,11 @@ async def sign_up(request: Request):
 async def oauth_login(request: Request):
     request_json = await request.json()
     request_email = request_json['email']
+    logger.info(f"POST request received at /oauth_login with email: {request_email}")
     access_token = request_json['accessToken']
     google_response = requests.get(GOOGLE_OAUTH_URL + f'/tokeninfo?access_token={access_token}')
     if google_response.status_code != 200:
+        logger.error("Error requesting user data from google")
         return public_status_messages.get('error_unexpected')
 
     google_response_json = google_response.json()
@@ -204,6 +236,8 @@ async def oauth_login(request: Request):
         json={'email': request_email}
     )
     if users_response.status_code != 200:
+        logger.error(
+            f"Error making POST request at {USERS_BACKEND_URL + '/oauth_login'}")
         return public_status_messages.get('error_unexpected')
     users_response_json = users_response.json()
 
@@ -216,6 +250,9 @@ async def oauth_login(request: Request):
             json=profile_json
         )
         if profile_response.status_code != 200:
+            logger.error(
+                f"Error making POST request at {BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/create'}"
+            )
             return public_status_messages.get('error_unexpected')
 
     # Creo el token
@@ -241,8 +278,12 @@ async def users_count():
 @app.post('/admin_login')
 async def admin_login(request: Request):
     request_json = await request.json()
+    logger.info(f"Received POST request at /admin_login with email: {request_json['email']}")
     response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
     if response.status_code != 200:
+        logger.error(
+            f"Error making POST request at {USERS_BACKEND_URL + request.url.path}"
+        )
         return public_status_messages.get('error_unexpected')
     response_json = response.json()
 
@@ -267,19 +308,28 @@ async def admin_login(request: Request):
 
 @app.post('/admin_register')
 async def admin_register(request: Request, _token=Depends(authenticate_admin_token)):
-    response = requests.post(USERS_BACKEND_URL + '/admin_create/', json=await request.json())
+    request_json = await request.json()
+    logger.info(f"Received POST request at /admin_register with email: {request_json['email']}")
+    response = requests.post(USERS_BACKEND_URL + '/admin_create/', json=request_json)
     if response.status_code != 200:
+        logger.error(
+            f"Error making POST request at {USERS_BACKEND_URL + '/admin_create/'}"
+        )
         return public_status_messages.get('error_unexpected')
     return response.json()
 
 
 @app.get('/get_all_users')
 async def get_all_users(current_user: dict = Depends(get_current_user)):
+    logger.info("Received GET request at /get_all_users")
     is_admin = "false"
     if current_user.is_admin:
         is_admin = "true"
     response = requests.get(USERS_BACKEND_URL + f'/users_list/{is_admin}')
     if response.status_code != 200:
+        logger.error(
+            f"Error making GET request at {USERS_BACKEND_URL + '/users_list/' + is_admin}"
+        )
         return public_status_messages.get('error_unexpected')
     return response.json()
 
@@ -288,16 +338,21 @@ async def get_all_users(current_user: dict = Depends(get_current_user)):
 
 @app.get('/courses/ping')
 async def business_ping():
+    logger.info("Received GET request at /courses/ping")
     response = requests.get(BUSINESS_BACKEND_URL + '/ping')
     return response.json()
 
 
 @app.get('/courses/data/{course_id}')
 async def get_course(request: Request, course_id: str, token_data=Depends(authenticate_token)):
+    logger.info(f"Received GET request at /courses/data/{course_id}")
     # TODO: Agregar el current_user.email al final del url como url param
     privilege: str = 'admin' if token_data.is_admin else 'user'
-    response = requests.get(BUSINESS_BACKEND_URL + COURSES_PREFIX + f"/data/{course_id}/{token_data.email}/{privilege}")
+    request_url = BUSINESS_BACKEND_URL + COURSES_PREFIX + \
+        f"/data/{course_id}/{token_data.email}/{privilege}"
+    response = requests.get(request_url)
     if response.status_code != 200:
+        logger.error(f"Error making GET request at {request_url}")
         return public_status_messages.get("error_unexpected")
 
     return response.json()
@@ -306,9 +361,13 @@ async def get_course(request: Request, course_id: str, token_data=Depends(authen
 @app.post('/courses/create_course')
 async def create_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
+    logger.info(f"Received POST request at /courses/create_course with body {request_json}")
     request_json['email'] = current_user.email
     response = requests.post(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create', json=request_json)
     if response.status_code != 200:
+        logger.error(
+            f"Error making POST request at {BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create'}"
+        )
         return public_status_messages.get("error_unexpected")
 
     return response.json()
@@ -317,10 +376,14 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
 @app.put('/courses/update_course')
 async def update_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
+    logger.info(f"Received PUT request at /courses/create_course with body {request_json}")
     request_json['email'] = current_user.email
     response = requests.put(BUSINESS_BACKEND_URL + COURSES_PREFIX + '/update', json=request_json)
 
     if response.status_code != 200:
+        logger.error(
+            f"Error making PUT request at {BUSINESS_BACKEND_URL + COURSES_PREFIX + '/update'}"
+        )
         return public_status_messages.get("error_unexpected")
     return response.json()
 
@@ -328,6 +391,7 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
 @app.post('/courses/subscribe')
 async def subscribe_to_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
+    logger.info(f"Received POST request at /courses/subscribe with body {request_json}")
     request_json['user_email'] = current_user.email
     response = requests.post(
         BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/subscribe_to_course',
@@ -335,6 +399,10 @@ async def subscribe_to_course(request: Request, current_user: dict = Depends(get
     )
 
     if response.status_code != 200:
+        logger.error(
+            f"Error making POST request at "
+            f"{BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/subscribe_to_course'}"
+        )
         return public_status_messages.get("error_unexpected")
     return response.json()
 
@@ -342,6 +410,7 @@ async def subscribe_to_course(request: Request, current_user: dict = Depends(get
 @app.post('/courses/unsubscribe')
 async def unsubscribe_to_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
+    logger.info(f"Received POST request at /courses/unsubscribe with body {request_json}")
     request_json['user_email'] = current_user.email
     response = requests.post(
         BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/unsubscribe_from_course',
@@ -349,16 +418,25 @@ async def unsubscribe_to_course(request: Request, current_user: dict = Depends(g
     )
 
     if response.status_code != 200:
+        logger.error(
+            f"Error making POST request at "
+            f"{BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/unsubscribe_from_course'}"
+        )
         return public_status_messages.get("error_unexpected")
     return response.json()
 
 
 @app.get('/courses/{course_id}/students', dependencies=[Depends(get_current_user)])
 async def course_students(course_id: str):
+    logger.info(f"Received GET request at /courses/{course_id}/students")
     response = requests.get(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/students'
     )
     if response.status_code != 200:
+        logger.error(
+            f"Error making GET request at "
+            f"{BUSINESS_BACKEND_URL + COURSES_PREFIX + '/' + course_id + '/students'}"
+        )
         return public_status_messages.get("error_unexpected")
     return response.json()
 
@@ -367,32 +445,37 @@ async def course_students(course_id: str):
 async def course_exam_students(course_id: str,
                                exam_name: str,
                                current_user=Depends(get_current_user)):
-    response = requests.get(
-        BUSINESS_BACKEND_URL + COURSES_PREFIX +
+    logger.info(f"Received GET request at /courses/{course_id}/{exam_name}/students")
+
+    request_url = BUSINESS_BACKEND_URL + COURSES_PREFIX + \
         f'/{course_id}/students/{current_user.email}/{exam_name}'
-    )
+    response = requests.get(request_url)
     if response.status_code != 200:
+        logger.error(f"Error making GET request at {request_url}")
         return public_status_messages.get("error_unexpected")
     return response.json()
 
 
-@app.get('/courses/{course_id}/exams/{filter}')
-async def course_exams(course_id: str, filter: str, current_user=Depends(get_current_user)):
-    response = requests.get(
-        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/exams/{course_id}/{filter}/{current_user.email}'
-    )
+@app.get('/courses/{course_id}/exams/{exam_filter}')
+async def course_exams(course_id: str, exam_filter: str, current_user=Depends(get_current_user)):
+    logger.info(f"Received GET request at /courses/{course_id}/exams/{filter}")
+    request_url = BUSINESS_BACKEND_URL + COURSES_PREFIX \
+        + f'/exams/{course_id}/{exam_filter}/{current_user.email}'
+    response = requests.get(request_url)
     if response.status_code != 200:
+        logger.error(f"Error making GET request at {request_url}")
         return public_status_messages.get('error_unexpected')
     return response.json()
 
 
 @app.get('/courses/{course_id}/students_exams/{exam_filter}')
 async def student_exams(course_id: str, exam_filter: str, current_user=Depends(get_current_user)):
-    response = requests.get(
-        BUSINESS_BACKEND_URL + COURSES_PREFIX +
-        f'/{course_id}/students_exams/{current_user.email}/{exam_filter}'
-    )
+    logger.info(f"Received GET request at /courses/{course_id}/students_exams/{exam_filter}")
+    request_url = BUSINESS_BACKEND_URL + COURSES_PREFIX \
+        + f'/{course_id}/students_exams/{current_user.email}/{exam_filter}'
+    response = requests.get(request_url)
     if response.status_code != 200:
+        logger.error(f"Error making GET request at {request_url}")
         return public_status_messages.get('error_unexpected')
     return response.json()
 
@@ -402,24 +485,30 @@ async def get_course_exam(
         course_id: str, exam_name: str, exam_filter: str, student_email: str,
         current_user=Depends(get_current_user)
 ):
-    response = requests.get(
-        BUSINESS_BACKEND_URL + COURSES_PREFIX +
+    logger.info(f"Received GET request at "
+                f"/courses/{course_id}/exam/{exam_name}/{exam_filter}/{student_email}")
+    request_url = BUSINESS_BACKEND_URL + COURSES_PREFIX + \
         f'/{course_id}/exam/{current_user.email}/{exam_name}/{exam_filter}/{student_email}'
-    )
+    response = requests.get(request_url)
     if response.status_code != 200:
+        logger.error(f"Error making GET request at {request_url}")
         return public_status_messages.get('error_unexpected')
     return response.json()
 
 
 @app.get('/search_courses/{course_type}/{subscription_type}')
-async def search_courses(course_type: str, subscription_type: str, current_user: str = Depends(get_current_user)):
+async def search_courses(course_type: str,
+                         subscription_type: str,
+                         current_user: str = Depends(get_current_user)):
+    logger.info(f"Received GET request at /search_courses/{course_type}/{subscription_type}")
     is_admin_string = "false"
     if (current_user.is_admin):
         is_admin_string = "true"
-    response = requests.get(
-        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/organized/{course_type}/{subscription_type}/{is_admin_string}'
-    )
+    request_url = BUSINESS_BACKEND_URL + COURSES_PREFIX + \
+        f'/organized/{course_type}/{subscription_type}/{is_admin_string}'
+    response = requests.get(request_url)
     if response.status_code != 200:
+        logger.error(f"Error making GET request at {request_url}")
         return public_status_messages.get('error_unexpected')
     return response.json()
 
@@ -427,12 +516,15 @@ async def search_courses(course_type: str, subscription_type: str, current_user:
 @app.post('/courses/create_exam')
 async def create_exam(request: Request, token: str = Depends(authenticate_token)):
     request_json = await request.json()
+    logger.info(f"Received POST request at /courses/create_exam with body {request_json}")
     request_json['exam_creator_email'] = token.email
     response = requests.post(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create_exam',
         json=request_json
     )
     if response.status_code != 200:
+        logger.error(f"Error making POST request at "
+                     f"{BUSINESS_BACKEND_URL + COURSES_PREFIX + '/create_exam'}")
         return public_status_messages.get("error_unexpected")
     return response.json()
 
@@ -440,12 +532,15 @@ async def create_exam(request: Request, token: str = Depends(authenticate_token)
 @app.put('/courses/edit_exam')
 async def edit_exam(request: Request, token: str = Depends(authenticate_token)):
     request_json = await request.json()
+    logger.info(f"Received PUT request at /courses/edit_exam with body {request_json}")
     request_json['email'] = token.email
     response = requests.post(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/edit_exam',
         json=request_json
     )
     if response.status_code != 200:
+        logger.error("fError making POST request at "
+                     f"{BUSINESS_BACKEND_URL + COURSES_PREFIX + '/edit_exam'}")
         return public_status_messages.get("error_unexpected")
     return response.json()
 
@@ -453,12 +548,17 @@ async def edit_exam(request: Request, token: str = Depends(authenticate_token)):
 @app.post('/courses/publish_exam')
 async def publish_exam(request: Request, token: str = Depends(authenticate_token)):
     request_json = await request.json()
+    logger.info(f"Received POST request at /courses/publish_exam with body {request_json}")
     request_json['exam_creator_email'] = token.email
     response = requests.post(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/publish_exam',
         json=request_json
     )
     if response.status_code != 200:
+        logger.error(
+            f"Error making POST request at "
+            f"{BUSINESS_BACKEND_URL + COURSES_PREFIX + '/publish_exam'}"
+        )
         return public_status_messages.get('error_unexpected')
     return response.json()
 
@@ -466,12 +566,17 @@ async def publish_exam(request: Request, token: str = Depends(authenticate_token
 @app.post('/courses/grade_exam')
 async def grade_exam(request: Request, token: str = Depends(authenticate_token)):
     request_json = await request.json()
+    logger.info(f"Received POST request at /course/grade_exam with body {request_json}")
     request_json['professor_email'] = token.email
     response = requests.post(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/grade_exam',
         json=request_json
     )
     if response.status_code != 200:
+        logger.error(
+            f"Error making POST request at "
+            f"{BUSINESS_BACKEND_URL + COURSES_PREFIX + '/grade_exam'}"
+        )
         return public_status_messages.get('error_unexpected')
     return response.json()
 
@@ -479,34 +584,49 @@ async def grade_exam(request: Request, token: str = Depends(authenticate_token))
 @app.post('/courses/complete_exam')
 async def complete_exam(request: Request, current_user: str = Depends(get_current_user)):
     request_json = await request.json()
+    logger.info(f"Received POST request at /courses/compelte_exam with body {request_json}")
     request_json['student_email'] = current_user.email
     response = requests.post(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/complete_exam',
         json=request_json
     )
     if response.status_code != 200:
+        logger.error(
+            f"Error making POST request at "
+            f"{BUSINESS_BACKEND_URL + COURSES_PREFIX + '/complete_exam'}"
+        )
         return public_status_messages.get('error_unexpected')
     return response.json()
+
 
 @app.post('/courses/add_collaborator')
 async def add_collaborator(request: Request, current_user: str = Depends(get_current_user)):
     request_json = await request.json()
+    logger.info(f"Received POST request at /courses/add_collaborator with body {request_json}")
     request_json['user_email'] = current_user.email
     response = requests.post(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/add_collaborator',
         json=request_json
     )
     if response.status_code != 200:
+        logger.error(
+            f"Error making POST request at "
+            f"{BUSINESS_BACKEND_URL + COURSES_PREFIX + '/add_collaborator'}"
+        )
         return public_status_messages.get('error_unexpected')
     return response.json()
 
 
 @app.get('/profile_setup')
 async def profile_setup():
+    logger.info("Received GET request at /profile_setup")
     countries_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries')
     genres_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/course_genres')
 
     if countries_response.status_code != 200 or genres_response.status_code != 200:
+        logger.error(f"Error making GET request at "
+                     f"{BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries'} or "
+                     f"{BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/course_genres'}")
         return public_status_messages.get('error_unexpected')
 
     countries_response_json = countries_response.json()
@@ -524,6 +644,7 @@ async def profile_setup():
 
 @app.get('/course_setup')
 async def course_setup():
+    logger.info("Received GET request at /course_setup")
     # TODO: A lot of repeated code from profile_setup
     countries_response = requests.get(
         BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries'
@@ -538,6 +659,10 @@ async def course_setup():
     if countries_response.status_code != 200 \
        or genres_response.status_code != 200 \
        or subscriptions_response.status_code != 200:
+        logger.error(f"Error making GET request at "
+                     f"{BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries'}, "
+                     f"{BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/course_genres'} or"
+                     f"{BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/subscription_types'}")
         return public_status_messages.get('error_unexpected')
 
     countries_response_json = countries_response.json()
@@ -561,6 +686,7 @@ async def course_setup():
 @app.put('/update_profile')
 async def udpate_profile(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
+    logger.info(f"Received PUT request at /update_profile with body {request_json}")
     request_json['email'] = current_user.email
     response = requests.post(
         BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/update',
@@ -568,17 +694,23 @@ async def udpate_profile(request: Request, current_user: dict = Depends(get_curr
     )
 
     if response.status_code != 200:
+        logger.error(
+            f"Error making POST request at {BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/update'}"
+        )
         return public_status_messages.get('error_unexpected')
     return response.json()
 
 
 @app.get('/profile/{profile_email}')
 async def get_profile(profile_email: str, token_data=Depends(authenticate_token)):
+    logger.info(f"Received GET request at /profile/{profile_email}")
     privilege: str = 'admin' if token_data.is_admin else 'user'
-    response = requests.get(
-        BUSINESS_BACKEND_URL + PROFILES_PREFIX + f"/{token_data.email}/{privilege}/{profile_email}"
-    )
+
+    request_url = BUSINESS_BACKEND_URL + PROFILES_PREFIX + \
+        f"/{token_data.email}/{privilege}/{profile_email}"
+    response = requests.get(request_url)
     if response.status_code != 200:
+        logger.error(f"Error making GET request at {request_url}")
         return public_status_messages.get('error_unexpected')
 
     return response.json()
@@ -587,20 +719,28 @@ async def get_profile(profile_email: str, token_data=Depends(authenticate_token)
 # SUBSCRIPTION ENDPOINTS
 @app.post('/modify_subscription')
 async def modify_subscription(request: Request, current_user: dict = Depends(get_current_user)):
-    request_json = await request.json()#Should have the new subscription wanted(Silver, Gold, Platinum)
+    # Should have the new subscription wanted(Silver, Gold, Platinum)
+    request_json = await request.json()
+    logger.info(f"Received POST request at /modify_subscription with body {request_json}")
     request_json['email'] = current_user.email
     response = requests.post(
         BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/modify_subscription',
         json=request_json
     )
     if response.status_code != 200:
+        logger.error(
+            f"Error making POST request at "
+            f"{BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/modify_subscription'}"
+        )
         return public_status_messages.get('error_unexpected')
     return response.json()
 
 
 @app.post('/pay_subscription')
 async def pay_subscription(request: Request, current_user: dict = Depends(get_current_user)):
-    request_json = await request.json()#Should have the new subscription wanted(Silver, Gold, Platinum)
+    # Should have the new subscription wanted(Silver, Gold, Platinum)
+    request_json = await request.json()
+    logger.info(f"Received POST request at /pay_subscription with body {request_json}")
     request_json['email'] = current_user.email
     response = requests.post(
         BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/pay_subscription',
@@ -608,6 +748,10 @@ async def pay_subscription(request: Request, current_user: dict = Depends(get_cu
     )
     response_json = response.json()
     if response.status_code != 200 or response_json['status'] == 'error':
+        logger.error(
+            f"Error making POST request at "
+            f"{BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/pay_subscription'}"
+        )
         return {"status": "error", "message": response_json["message"]}
     return response_json
 
@@ -621,47 +765,66 @@ async def get_deposits(request: Request, email: str):
 
 @app.get('/my_courses')
 async def my_courses(request: Request, current_user: dict = Depends(get_current_user)):
-    response = requests.get(
-        BUSINESS_BACKEND_URL + PROFILES_PREFIX + f'/my_courses/{current_user.email}')
+    logger.info("Received GET request at /my_courses")
+
+    request_url = BUSINESS_BACKEND_URL + PROFILES_PREFIX + \
+        f'/my_courses/{current_user.email}'
+    response = requests.get(request_url)
     if response.status_code != 200:
+        logger.error(f"Error making GET request at {request_url}")
         return public_status_messages.get('error_unexpected')
     return response.json()
+
 
 @app.get('/course_genres')
 async def course_genres(request: Request, current_user: dict = Depends(get_current_user)):
-    response = requests.get(
-        BUSINESS_BACKEND_URL + PROFILES_PREFIX + f'/course_genres')
+    logger.info("Received GET request at /course_genres")
+
+    request_url = BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/course_genres'
+    response = requests.get(request_url)
     if response.status_code != 200:
+        logger.error(f"Error making GET request at {request_url}")
         return public_status_messages.get('error_unexpected')
     return response.json()
 
+
 @app.get('/subscription_types')
 async def subscription_types(request: Request, current_user: dict = Depends(get_current_user)):
-    response = requests.get(
-        BUSINESS_BACKEND_URL + PROFILES_PREFIX + f'/subscription_types_names')
+    logger.info("Received GET request at /subscription_types")
+
+    request_url = BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/subscription_types_names'
+    response = requests.get(request_url)
     if response.status_code != 200:
+        logger.error(f"Error making GET request at {request_url}")
         return public_status_messages.get('error_unexpected')
     return response.json()
 
 
 @app.get('/courses/passing')
 async def get_passing_courses(current_user=Depends(get_current_user)):
-    response = requests.get(
-        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/passing_courses/{current_user.email}'
-    )
+    logger.info("Received GET request at /courses/passing")
+    request_url = BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/passing_courses/{current_user.email}'
+    response = requests.get(request_url)
     if response.status_code != 200:
+        logger.error(f"Error making GET request at {request_url}")
         return public_status_messages.get('error_unexpected')
     return response.json()
 
+
 @app.post('/change_blocked_status', dependencies=[Depends(authenticate_token)])
 async def change_blocked_status(request: Request):
-    request_json = await request.json()#Should have the new subscription wanted(Silver, Gold, Platinum)
+    # Should have the new subscription wanted(Silver, Gold, Platinum)
+    request_json = await request.json()
+    logger.info(f"Received POST request at /change_blocked_status with body {request_json}")
     response = requests.post(
         USERS_BACKEND_URL + '/change_blocked_status',
         json=request_json
     )
     response_json = response.json()
     if response.status_code != 200:
+        logger.error(
+            f"Error making POST request at {USERS_BACKEND_URL + '/change_blocked_status'}"
+        )
         return public_status_messages.get('error_unexpected')
     return response_json
 
@@ -669,6 +832,7 @@ async def change_blocked_status(request: Request):
 @app.post('/grade_course')
 async def grade_course(request: Request, current_user=Depends(get_current_user)):
     request_json = await request.json()
+    logger.info(f"Received POST request at /grade_course with body {request_json}")
     request_json['user_email'] = current_user.email
     response = requests.post(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + '/grade_course',
@@ -676,24 +840,39 @@ async def grade_course(request: Request, current_user=Depends(get_current_user))
     )
     response_json = response.json()
     if response.status_code != 200:
+        logger.error(
+            f"Error making POST request at "
+            f"{BUSINESS_BACKEND_URL + COURSES_PREFIX + '/grade_course'}"
+        )
         return public_status_messages.get('error_unexpected')
     return response_json
 
-@app.get('/student_gradings/{id}', dependencies=[Depends(authenticate_token)])
-async def get_student_gradings(id: str):
+
+@app.get('/student_gradings/{student_id}', dependencies=[Depends(authenticate_token)])
+async def get_student_gradings(student_id: str):
+    logger.info(f"Received GET request at /student_gradings{student_id}")
     response = requests.get(
-        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/student_gradings/{id}'
+        BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/student_gradings/{student_id}'
     )
     if response.status_code != 200:
+        logger.error(
+            f"Error making GET request at"
+            f"{BUSINESS_BACKEND_URL + COURSES_PREFIX + '/student_gradings/' + student_id}"
+        )
         return public_status_messages.get('error_unexpected')
     return response.json()
 
+
 @app.get('/users_metrics', dependencies=[Depends(authenticate_admin_token)])
 async def users_metrics():
+    logger.info("Received GET request at /users_metrics")
     response = requests.get(
-        USERS_BACKEND_URL + f'/users_metrics'
+        USERS_BACKEND_URL + '/users_metrics'
     )
     if response.status_code != 200:
+        logger.error(
+            f"Error making GET request at {USERS_BACKEND_URL + '/users_metrics'}"
+        )
         return public_status_messages.get('error_unexpected')
     return response.json()
 
