@@ -177,6 +177,7 @@ async def login(request: Request):
 async def sign_up(request: Request):
     request_json = await request.json()
     logger.info(f"POST request received at /sign_up with email: {request_json['email']}")
+    logger.debug(request_json)
     response = requests.post(USERS_BACKEND_URL + '/create/', json=request_json)
     if response.status_code != 200:
         logger.error(
