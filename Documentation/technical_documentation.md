@@ -88,6 +88,7 @@ Como se dijo previamente, las bibliotecas utilizadas por este servicio son:
 &nbsp;&nbsp;&nbsp;&nbsp;Esta funcionalidad retorna la cantidad total de usuarios de la plataforma, la cantidad de usuarios que se registraron el último día, la cantidad de usuarios bloqueados, y la cantidad de usaurios que se loguearon en la última hora, siempre diviendo seǵun el tipo de login del usuario (excepto en la cantidad de usuarios de la plataforma y la cantidad de usuarios bloqueados). Esta funcionalidad solo debe ser accedida por un administrador, sin embargo, el chequeo necesario es realizado por Api Gateway, quien rebota al usuario si no cumple con los requisitos necesarios.
 
 TODO: AGREGAR INFORMACIÓN SOBRE EL ENVIADO DE MENSAJES
+TODO: AGREGAR INFORMACIÓN DEL LISTADO DE USUARIOS Y SOBRE BLOQUEAR USUARIOS
 
 # Business
 
@@ -212,10 +213,11 @@ Un usuario puede interactuar con los exámenes de un curso de diversas maneras, 
 - Creación de perfil: cuando se llama a la funcionalidad de creación de perfil (llamada solo por Api Gateway al registrar un usuario), se crea un perfil default, asignando algunos valores que se reciben en la request, y luego se procede a agregarlo en la colección de perfiles (Profiles). En caso de que el perfil ya se encontrara creado se retorna un error, ya que, al crearse un perfil únicamente cuando se registra un nuevo usuario, si el perfil que se quiere crear ya existe entonces falló la validación realizada por el backend Users.
 - Obtención de datos del perfil: el endpoint que se encarga de manejar la visualización de perfil maneja la obtención de datos del perfil propio, del perfil de otro usuario, y del perfil de usuarios siendo un administrador. Esto lo realiza recibiendo quién hace el pedido (su mail), el modo en el que realiza el pedido (si es un usuario o un administrador, lo cual es validado por Api Gateway), y el mail del usuario del cual se quiere visualizar el perfil. Si el usuario que hace la request es un usuario normal, entonces recibirá toda la información del perfil si pide su propio perfil, en cambio si pide el perfil de otro usuario recibirá únicamente la información pública (que son el mail, el nombre del usuario, y la foto de perfil). En cambio, si el usuario que pide el perfil es un administrador, se le otorgará toda la información del perfil, sea pública o privada.
 - Obtención de los cursos relacionados a un usuario: toma del perfil del usuario los cursos en los que este se encuentra suscripto, es colaborador o es creador y obtiene su nombre y el nombre del creador (excepto en el caso de los cursos propios). Para hacer esto se realizan dos procedimientos distintos, en el caso de los cursos en los que el usuario está inscripto o es colaborador, al tener en el perfil las listas con los ids de los cursos correspondientes, simplemente se realiza una búsqueda de esos cursos en la collection correspondiente, obteniendo de allí el nombre del curso, su id, y el mail del creador. Por otro lado, como los cursos que creó un usuario no están guardados en su perfil, se realiza una búsqueda sobre la colección de cursos, buscando cuáles tienen un mail de creador que matchea con el mail del usuario que pide sus cursos, y obteniendo de estos el id y el nombre.
+- Obtención de los cursos aprobados por un usuario: esta funcionalidad es muy similar a la anteriormente descripta, se toman los ids de la lista de cursos aprobados, y se realiza una query en la colección de cursos para obtener los nombres de los cursos y los mails de sus creadores.
 
 ### Otros
 
-TODO: AGREGAR LA INSCRIPCIÓN A SUSCRIPCIÓN
+TODO: AGREGAR LA INSCRIPCIÓN A SUSCRIPCIÓN JUNTO CON MODIFICACIÓN DE SUSCRIPCIÓN
 
 # Payments
 
