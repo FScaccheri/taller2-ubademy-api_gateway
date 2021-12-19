@@ -168,9 +168,36 @@ Al igual que en el caso de los cursos, al utilizarse para una gran cantidad de f
 
 ## Bibliotecas
 
-Las bibliotecas que se utilizaron para la implementación del backend Business son las siguientes:
+Las bibliotecas principales que se utilizaron para la implementación del backend Business son las siguientes:
 - Mongodb: es una de las bibliotecas de mayor importancia del programa, es utilizada para todas las interacciones realizadas con la base de datos, permite la implementación de todas las funcionalidades que requieren persistencia de datos en disco, por lo que permitió la implementación de la mayoría de los servicios que requiere el usuario de la app.
-- Express: es utilizado para cumplir las funcionalidades de Fastapi y levantar el servidor, es decir, se encarga de generar un servidor que acepta conexiones para hacer pedidos HTTP, y además parsea los mensajes recibidos para mapear los requests HTTP a los endpoints (y por lo tanto funciones e implementaciones) correspondientes.
+- Express: es utilizado para cumplir las funcionalidades de Fastapi y levantar el servidor, es decir, se encarga de generar un servidor que acepta conexiones para hacer pedidos HTTP, y además parsea los mensajes recibidos para mapear los requests HTTP a los endpoints (y por lo tanto funciones e implementaciones) correspondientes. Se utilizó también para comunicar Business con Payments
+- js-schema: es utilizado para corroborar que el cuerpo de los requests recibidos contiene los parámetros esperados, además de que estos cumplan reglas que permite establecer la biblioteca.
+
+## Funcionalidades
+
+A continuación se describirán todas las funcionalidades que fueron implementadas para Business. Es necesario aclarar que en todos estos endpoints cuando es necesario se realizan chequeos sobre la existencia de los usuarios que interactúan con el backend o los usuarios sobre los se quiere operar, además de chequear que 
+
+
+### Interacciones con cursos
+
+Un usuario puede interactuar con un curso de diversas maneras, las cuales son:
+- Crear un curso: un usuario puede crear un curso, indicándole el nombre y el tipo de suscripción que el alumno que quiera inscribirse deberá tener para poder cursar. Al momento de crear un curso se inserta en la collection Courses de la base de datos Business de Atlas un documento Course inicial, que es una instancia de la clase Course.
+- Inscribirse en un curso: un usuario puede intentar inscribirse en un curso específico. Al hacerlo, se corrobora si tiene el tipo de suscripción suficiente como para que se acepte su intento de inscripción. En caso de que sí lo sea, se agregará su mail a la lista de estudiantes del curso, y el id del curso a la lista de cursos suscriptos del perfil del estudiante.
+- Desisncribirse de un curso: se elimina el id del curso de la lista de cursos inscriptos del perfil del estudiante, y se elimina también el mail del estudiante de la lista de estudiantes de la entrada del curso en Courses.
+- Obtener los datos de un curso: cuando un usuario pide los datos de un curso, se le retornará un nivel de claridad que indica qué atributos se le permite ver al usuario que acaba de pedirlos. Se comienza haciendo un pedido de los datos del curso a la base de datos. En caso de ser un administrador, creador o colaborador del curso, se le retornará toda la información disponible. En caso de ser un estudiante suscrito al curso, se le retornará la información que le permita cursar apropiadamente la clase, es decir, los fotos y los videos que fueron subidos por el creador, pero no se le permitirá ver otra información, como los colaboradores o el resto de los estudiantes. Por último, si el usuario que quiere acceder al curso no pertenece a ninguno de los casos anteriores, es decir, no está relacionado como docente al curso, no es administrador, y además no es un estudiante del curso, se le proporcionará únicamente información que le permita decidir si le interesa suscribirse al curso, es decir, la foto de previsualización, el nombre y la descripción, para que sepa el tema principal que tratan las clases.
+- Agregar colaborador: un creador de un curso puede agregar un colaborador a la lista de colaboradores del curso, para esto se hace una query de los estudiantes y los colaboradores a la base de datos, se corrobora que el colaborador agregado exista y no sea un estudiante o el creador, y se agrega a la lista de colaboradores si es que previamente no se encontraba allí. Una vez hecho esto, el usuario agregado podrá cumplir todas las funcionalidades de un colaborador.
+- Búsqueda de cursos por categoría y suscripción: para esta funcionalidad se realizó una query a mongo de cursos según los filtros de categoría y tipo de suscripción del curso recibidos en simultáneo, permitiendo enviar también solo uno de los dos filtros. También permite la funcionalidad de pedir los cursos sin filtros, es decir, todos los cursos disponibles, sin embargo, esta funcionalidad está disponible solo para los administradores. Al conseguir los cursos que resulten de los filtros aplicados, se retorna información básica de ellos, como el id que les fue asignado por mongo, el nombre del curso, la foto de previsualización, el tipo de suscripción y el tipo de curso (el género).
+- Edición de curso: para implementar esta funcionalidad, se reciben todos los datos que van a ser modificados del curso, y se llama a un update de mongo para cambiar los valores actuales a los valores recibidos. 
+
+### Interacciones con exámenes
+Un usuario puede interactuar con los exámenes de un curso de diversas maneras, las cuales son:
+- Crear un examen: un creador de un curso puede crear un examen para su curso, guardando el nombre y las preguntas del examen en el documento de examenes que le pertenece al curso. En caso de que el nombre del examen ya exista para el curso modificado, se rechazará la request y se indicará que el nombre indicado ya se encuentra en uso, para lograr esto primero se itera por la lista de exámenes del curso (utilizando una query de Mongodb), chequeando si se retorna un examen con el nombre indicado.
+
+### Interacciones con perfiles
+
+TODO: AGREGAR LA OBTENCIÓN DE DATOS DEL PERFIL DE UN USUARIO
+
+### Otros
 
 # Payments
 
