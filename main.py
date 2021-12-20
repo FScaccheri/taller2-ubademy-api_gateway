@@ -156,7 +156,7 @@ async def login(request: Request):
         )
         return public_status_messages.get('error_unexpected')
     validate_sub_response_json = validate_sub_response.json()
-    if validate_sub_response_json['error']:
+    if validate_sub_response_json['status'] == 'error':
         return validate_sub_response_json
 
     logger.info(f"POST at /login validate_sub_response: {validate_sub_response_json}")
@@ -177,6 +177,7 @@ async def login(request: Request):
 async def sign_up(request: Request):
     request_json = await request.json()
     logger.info(f"POST request received at /sign_up with email: {request_json['email']}")
+    logger.debug(request_json)
     response = requests.post(USERS_BACKEND_URL + '/create/', json=request_json)
     if response.status_code != 200:
         logger.error(
@@ -233,7 +234,7 @@ async def oauth_login(request: Request):
 
     users_response = requests.post(
         USERS_BACKEND_URL + '/oauth_login',
-        json={'email': request_email}
+        json=request_json
     )
     if users_response.status_code != 200:
         logger.error(
@@ -884,7 +885,8 @@ async def send_message(request: Request, current_user: dict = Depends(get_curren
     logger.info(f"Received POST request at /send_message with body {request_json}")
 
     response = requests.post(
-        USERS_BACKEND_URL + f'/send_message'
+        USERS_BACKEND_URL + '/send_message',
+        json=request_json
     )
 
     if response.status_code != 200:
@@ -903,8 +905,6 @@ async def send_message(request: Request, current_user: dict = Depends(get_curren
     if response.status_code != 200:
         return public_status_messages.get('error_unexpected')
     return response.json()
-
-
 
 
 if __name__ == '__main__':

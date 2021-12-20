@@ -20,8 +20,9 @@ class NewrelicLogger:
         error_message = f'[ERROR]: {message}'
         self.__forward_log(error_message)
 
-    def debug(self, _message):
-        pass
+    def debug(self, message):
+        debug_message = f'[DEBUG]: {message}'
+        self.__forward_log(debug_message)
 
     def __forward_log(self, message):
         payload = {
