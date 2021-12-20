@@ -10,9 +10,10 @@
 
 &nbsp;&nbsp;&nbsp;&nbsp;Comienzo de configuración de continuous deployment e integration (CD, CI), familiarización con los entornos de trabajo (docker, heroku, bibliotecas de manejo de bases de datos como Postgre y Mongo, monitorización de backends con New Relic). En este checkpoint se comenzó a usar las distintas herramientas principales del trabajo, se levantaron servers de python con Uvicorn y Fastapi, se levantaron servers con Express, se establecieron conexiones con las bases de datos y se probó producción que estas funcionaran correctamente.  
 &nbsp;&nbsp;&nbsp;&nbsp;Una vez terminada la investigación y configuración, se prosiguió a implementar las primeras funcionalidades básicas de la aplicación. Estas son:
-- Registrar usuario: tanto en frontend como en backend se implementó la funcionalidad de registro normal de usuario (es decir, utilizando una cuenta de Ubademy, no un login federado)
-- Registrar admin:
-- Ver perfil de usuarios:
+- Registrar usuario: en backend se implementó la funcionalidad de registro normal de usuario (es decir, utilizando una cuenta de Ubademy, no un login federado).
+- Loguearse como usuario: a pesar de que no se encontraba implementada la pantalla que pide mail y contraseña, sí se utilizaba el endpoint de login para loggear un usuario.
+- Registrar admin: se implementó tanto en front como en back la funcionalidad de administradores de registrar otro administrador.
+- Ver perfil de usuarios: se permitió visualizar tanto el perfil propio como de otros usuarios (tomando en cuenta qué información es pública y qué no), además de poder obtener la información del perfil de otros usuarios como administrador.
 
 Es necesario aclarar que, al no planear implementar funcionalidades relacionadas con los pagos, el backend de Payments no se desarrolló en este checkpoint, sino que se desarrollaron Api Gateway, Users y Business.
 
