@@ -36,5 +36,21 @@ Es necesario aclarar que, al no planear implementar funcionalidades relacionadas
 
 # Checkpoint 3
 
+&nbsp;&nbsp;&nbsp;&nbsp;Este fue el checkpoint en el que más avance se realizó, implementando una gran cantidad de funcionalidades tanto en frontend como en backend, y es el checkpoint en el que se comenzó a implementar las funcionalidades relacionadas con los pagos, es decir, se comenzó a implementar el servicio Payments. Las funcionalidades implementadas fueron:
+- Inscripción en cursos: tanto en frontend como backend, se permitió a los usuarios inscribirse en cursos específicos.
+- Desinscribirse de cursos: tanto en frontend como backend, se permitió a los usuarios desinscribirse de cursos específicos en los que se encontraba previamente inscripto.
+- Crear curso: se terminó de conectar el frontend con el backend, permitiendo realmente crear un curso desde la aplicación y que se persista en la base de datos.
+- Editar curso: se conectó el front con el back, permitiendo así editar un curso específico en la base de datos desde la aplicación.
+- Medalla de curso aprobado: se implementó la funcionalidad de completar un curso, permitiendo también al frontend conseguir estos cursos y mostrarlos en el perfil, donde se puede elegir uno de los cursos aprobados para compartir un pdf que lo demuestre.
+- Listado de alumnos del curso: se permitió tanto en front como en back a los docentes obtener los usuarios que se encuentran suscriptos al curso, permitiendo filtrarlos según si completaron un examen específico.
+- Listado de exámenes: se permitió tanto en front como en back obtener los exámenes disponibles en el curso tanto para los estudiantes comopara los docentes, permitiendo además para los docentes listar todos los exámenes rendidos por los alumnos, permitiendo filtrar según si un examen fue corregido o no.
+- Crear examen: se permitió para el front y el back crear un examen para el curso siendo un creador.
+- Publicar un examen: se permitió para el front y el back publicar un examen si el que lo hace es el creador.
+- Editar un examen no publicado: se permitió en el front y el back al creador de un curso editar el contenido de un examen que no se encuentre publicado.
+- Corregir un examen: se permitió en front y back que un docente corrija un examen completado por un alumno.
+- Visualizar examen: se permitió a los alumnos ver sus exámenes corregidos, además de ver los exámenes que pueden rendir. También se le permitió a los docentes ver los exámenes subidos al curso, y visualizar un exámen como si fuera un alumno que está por completarlo.
+- Login biométrico: se permitió en el front y el back el uso del login con datos biométricos, particularmente la huella digital.
+- Intercambio de mensajes por chat: se permitió en la aplicación el intercambio de mensajes entre los distintos usuarios de la aplicación.
+
 
 # Checkpoint 4
