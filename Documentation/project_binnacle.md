@@ -51,6 +51,20 @@ Es necesario aclarar que, al no planear implementar funcionalidades relacionadas
 - Visualizar examen: se permitió a los alumnos ver sus exámenes corregidos, además de ver los exámenes que pueden rendir. También se le permitió a los docentes ver los exámenes subidos al curso, y visualizar un exámen como si fuera un alumno que está por completarlo.
 - Login biométrico: se permitió en el front y el back el uso del login con datos biométricos, particularmente la huella digital.
 - Intercambio de mensajes por chat: se permitió en la aplicación el intercambio de mensajes entre los distintos usuarios de la aplicación.
+- Inscripción a suscripción: se permitió en backend cambiar la suscripción a la que se encuentra inscripto, pagando la cantidad de dinero correspondiente.
+- Alta de colaborador: se permitió tanto en frontend como backend a un creador de un curso agregar un colaborador a este.
+- Búsqueda de cursos: se permitió realizar una búsqueda de cursos, filtrando según el género del curso y su tipo de suscripción.
 
 
 # Checkpoint 4
+
+&nbsp;&nbsp;&nbsp;&nbsp;En el último checkpoint de la materia se terminaron de implementar las últimas funcionalidades de la aplicación, además de mejorar la experiencia de usuario. Las funcionalidades implementadas fueron:
+- Calificaciones de curso: se permitió tanto en front como en back puntuar cuantitativa y cualitativamente un curso para un estudiante que se encuentra suscrito a él.
+- Bloqueo de usuarios: se permitió tanto en backoffice como en back el bloqueo y desbloqueo de usuarios para los administradores.
+- Métricas de usuario: se permitió tanto en backoffice como en back obtener métricas sobre el registro, loggeo y bloqueo de usuarios.
+- Listado y visualización de cursos: se permitió en el backoffice (es decir, para los administradores) obtener una lista de todos los cursos de la aplicación, con filtros aplicables, y visualizarlos como si fueran creadores del curso.
+- Visualizar perfil como administrador: se permitió en backoffice obtener el perfil de un usuario, visualizando toda su información disponible.
+- Listar transacciones: se permitió en backoffice y en backend listar las transacciones realizadas en la aplicación, permitiendo aplicar un filtro que indica algún usuario que esté involucrado en ella.
+- Modificación de suscripción: se permitió en la aplicación modificar la suscripción del alumno, conectando con el endpoint de Payments previamente implementado.
+- Modificación de suscriptión: se permitió en backend modificar la suscripción actual que tiene un usuario de la aplicación, modificando su acceso a los cursos según lo que haya elegido.
+- Cobro de pagos como docente: se agregó la funcionalidad de que, cuando un alumno se inscribe a un curso, se le transfiere cierta cantidad de dinero al docente a cargo.
