@@ -776,6 +776,18 @@ async def my_courses(request: Request, current_user: dict = Depends(get_current_
         return public_status_messages.get('error_unexpected')
     return response.json()
 
+@app.get('/user_courses/{user_email}', dependencies=[Depends(authenticate_admin_token)])
+async def user_courses(request: Request, user_email: str):
+    logger.info("Received GET request at /user_courses")
+
+    request_url = BUSINESS_BACKEND_URL + PROFILES_PREFIX + \
+        f'/my_courses/{user_email}'
+    response = requests.get(request_url)
+    if response.status_code != 200:
+        logger.error(f"Error making GET request at {request_url}")
+        return public_status_messages.get('error_unexpected')
+    return response.json()
+
 
 @app.get('/course_genres')
 async def course_genres(request: Request, current_user: dict = Depends(get_current_user)):
