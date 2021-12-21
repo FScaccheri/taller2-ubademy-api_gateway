@@ -36,23 +36,93 @@ PROFILES_PREFIX = '/profiles'
 tags_metadata = [
     {
         "name": "login",
-        "description": """Endpoint used to login the user, it receives a body with the following schema
+        "description": """Endpoint used to login the user, it receives a
+        body with the following schema
         {
-            email: str
-            password: str
+            email: str,
+            password: str,
             expo_token: str
         }
 
-        If the login was successful, it returns a Json Web Token used for operations validation, and if there is a problem it returns a message indicating what it was
-        """,
+        If the login was successful, it returns a Json Web Token used for
+        operations validation, and if there is a problem it returns a message
+        indicating what it was.
+        """
     },
     {
-        "name": "items",
-        "description": "Manage items. So _fancy_ they have their own docs.",
-        "externalDocs": {
-            "description": "Items external docs",
-            "url": "https://fastapi.tiangolo.com/",
-        },
+        "name": "sign_up",
+        "description": """Endpoint used to sign up the user, it receives a
+        body with the following schema:
+        {
+            email: str,
+            password: str,
+            expo_token: str
+        }
+
+        If the sign up was successful, it returns a Json Web Token used for
+        operations validation, and if there is a problem it returns a message
+        indicating what it was.
+        """
+    },
+    {
+        "name": "oauth_login",
+        "description": """Endpoint used to login the user, it receives a body
+        with the following schema:
+        {
+            email: str,
+            password: str,
+            expo_token: str
+        }
+
+        If the login was successful, it returns a Json Web Token used for
+        operations validation, and if there is a problem it returns a message
+        indicating what it was.
+        """
+    },
+    {
+        "name": "admin/users_count",
+        "description":
+    },
+    {
+        "name": "admin_login",
+        "description":
+    },
+    {
+        "name": "admin_register",
+        "description":
+    },
+    {
+        "name": "get_all_users",
+        "description":
+    },
+    {
+        "name": "courses/data/course_id",
+        "description": """Endpoint to get the course's data. The level of data
+        returned depends on the user's relationship with the course. If there
+        was a problem it returns a message indicating what it was."""
+    },
+    {
+        "name": "courses/create_course",
+        "description": """Endpoint used to create a course. It receives a
+        body with the following schema:
+        {
+            title: str,
+            description: str,
+            total_exams: number,
+            subscription_type: str,
+            course_type: str,
+            country: str,
+            hashtags: array,
+            images: array,
+            videos: array
+        }
+        If the creation was successful, it returns the course's id. If there
+        was a problem it returns a message indicating what it was
+        """
+    },
+    {
+        "name":
+        "description":
     },
 ]
 
@@ -172,7 +242,7 @@ async def login(request: Request):
     }
 
 
-@app.post('/sign_up')
+@app.post('/sign_up', tags = ['sign_up'])
 async def sign_up(request: Request):
     response = requests.post(USERS_BACKEND_URL + '/create/', json=await request.json())
     if response.status_code != 200:
@@ -206,7 +276,7 @@ async def sign_up(request: Request):
     }
 
 
-@app.post('/oauth_login')
+@app.post('/oauth_login', tags = ['oauth_login'])
 async def oauth_login(request: Request):
     request_json = await request.json()
     request_email = request_json['email']
@@ -254,12 +324,14 @@ async def oauth_login(request: Request):
 # BACKOFFICE ENDPOINTS
 
 
-@app.get('/admin/users_count', dependencies=[Depends(authenticate_admin_token)])
+@app.get('/admin/users_count',
+    dependencies=[Depends(authenticate_admin_token)],
+    tags = ['admin/users_count'])
 async def users_count():
     return {"status": "ok", "count": 15}
 
 
-@app.post('/admin_login')
+@app.post('/admin_login', tags = ['admin_login'])
 async def admin_login(request: Request):
     request_json = await request.json()
     response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
@@ -313,7 +385,7 @@ async def business_ping():
     return response.json()
 
 
-@app.get('/courses/data/{course_id}')
+@app.get('/courses/data/{course_id}', tags = ['courses/data/course_id'])
 async def get_course(request: Request, course_id: str, token_data=Depends(authenticate_token)):
     # TODO: Agregar el current_user.email al final del url como url param
     privilege: str = 'admin' if token_data.is_admin else 'user'
@@ -324,7 +396,7 @@ async def get_course(request: Request, course_id: str, token_data=Depends(authen
     return response.json()
 
 
-@app.post('/courses/create_course')
+@app.post('/courses/create_course', tags = ['courses/create_course'])
 async def create_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['email'] = current_user.email
