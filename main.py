@@ -81,19 +81,19 @@ tags_metadata = [
     },
     {
         "name": "admin/users_count",
-        "description":
+        "description": ""
     },
     {
         "name": "admin_login",
-        "description":
+        "description": ""
     },
     {
         "name": "admin_register",
-        "description":
+        "description": ""
     },
     {
         "name": "get_all_users",
-        "description":
+        "description": ""
     },
     {
         "name": "courses/data/course_id",
@@ -121,8 +121,25 @@ tags_metadata = [
         """
     },
     {
-        "name":
-        "description":
+        "name": "courses/update_course",
+        "description": """Endpoint used to update a course. It receives a body
+        with the following schema:
+        {
+            title: str,
+            description: str,
+            total_exams: number,
+            subscription_type: str,
+            course_type: str,
+            country: str,
+            hashtags: array,
+            images: array,
+            videos: array
+        }
+        """
+    },
+        {
+        "name": "",
+        "description": ""
     },
 ]
 
@@ -407,7 +424,7 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
     return response.json()
 
 
-@app.put('/courses/update_course')
+@app.put('/courses/update_course', tags = ['courses/update_course'])
 async def update_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['email'] = current_user.email
