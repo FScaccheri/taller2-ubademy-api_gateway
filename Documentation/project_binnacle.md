@@ -68,3 +68,5 @@ Es necesario aclarar que, al no planear implementar funcionalidades relacionadas
 - Modificación de suscripción: se permitió en la aplicación modificar la suscripción del alumno, conectando con el endpoint de Payments previamente implementado.
 - Modificación de suscriptión: se permitió en backend modificar la suscripción actual que tiene un usuario de la aplicación, modificando su acceso a los cursos según lo que haya elegido.
 - Cobro de pagos como docente: se agregó la funcionalidad de que, cuando un alumno se inscribe a un curso, se le transfiere cierta cantidad de dinero al docente a cargo.
+
+TODO: AGREGAR DATA DE NOTIFICACIONES DE MENSAJES
