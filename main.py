@@ -135,9 +135,36 @@ tags_metadata = [
             images: array,
             videos: array
         }
+        If there was a problem it returns a message indicating what it was.
         """
     },
+    {
+        "name": "courses/subscribe",
+        "description": """Endpoint used to subscribe a user to a course. It
+        receives a body with the following schema:
         {
+            course_id: str
+        }
+        If there was a problem it returns a message indicating what it was.
+        """
+    },
+    {
+        "name": "courses/unsubscribe",
+        "description": """Endpoint used to subscribe a user to a course. It
+        receives a body with the following schema:
+        {
+            course_id: str
+        }
+        If there was a problem it returns a message indicating what it was.
+        """
+    },
+    {
+        "name": "courses/course_id/students",
+        "description": """
+        
+        """
+    },
+    {
         "name": "",
         "description": ""
     },
@@ -435,7 +462,7 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
     return response.json()
 
 
-@app.post('/courses/subscribe')
+@app.post('/courses/subscribe', tags = ['courses/subscribe'])
 async def subscribe_to_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['user_email'] = current_user.email
@@ -449,7 +476,7 @@ async def subscribe_to_course(request: Request, current_user: dict = Depends(get
     return response.json()
 
 
-@app.post('/courses/unsubscribe')
+@app.post('/courses/unsubscribe', tags = ['courses/unsubscribe'])
 async def unsubscribe_to_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['user_email'] = current_user.email
@@ -463,7 +490,9 @@ async def unsubscribe_to_course(request: Request, current_user: dict = Depends(g
     return response.json()
 
 
-@app.get('/courses/{course_id}/students', dependencies=[Depends(get_current_user)])
+@app.get('/courses/{course_id}/students',
+    dependencies=[Depends(get_current_user)],
+    tags = ['courses/course_id/students'])
 async def course_students(course_id: str):
     response = requests.get(
         BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/{course_id}/students'
