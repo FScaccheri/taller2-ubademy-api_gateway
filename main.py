@@ -32,7 +32,32 @@ GOOGLE_OAUTH_URL = 'https://www.googleapis.com/oauth2/v3'
 COURSES_PREFIX = '/courses'
 PROFILES_PREFIX = '/profiles'
 
-app = FastAPI()
+
+tags_metadata = [
+    {
+        "name": "login",
+        "description": """Endpoint used to login the user, it receives a body with the following schema
+        {
+            email: str
+            password: str
+            expo_token: str
+        }
+
+        If the login was successful, it returns a Json Web Token used for operations validation, and if there is a problem it returns a message indicating what it was
+        """,
+    },
+    {
+        "name": "items",
+        "description": "Manage items. So _fancy_ they have their own docs.",
+        "externalDocs": {
+            "description": "Items external docs",
+            "url": "https://fastapi.tiangolo.com/",
+        },
+    },
+]
+
+
+app = FastAPI(openapi_tags=tags_metadata)
 
 app.add_middleware(
     CORSMiddleware,
@@ -117,7 +142,7 @@ async def users_ping():
     return response.json()
 
 
-@app.post('/login')
+@app.post('/login', tags = ['login'])
 # Request: https://www.starlette.io/requests/
 async def login(request: Request):
     # The documentation uses data instead of json but it is not updated
