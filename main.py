@@ -893,6 +893,19 @@ async def send_message(request: Request, current_user: dict = Depends(get_curren
         return public_status_messages.get('error_unexpected')
     return response.json()
 
+@app.post('/logout')
+async def logout(request: Request, current_user: dict = Depends(get_current_user)):
+    request_json = {'email': current_user.email}
+    logger.info(f"Received POST request at /logout with body {request_json}")
+
+    response = requests.post(
+        USERS_BACKEND_URL + f'/log_out'
+    )
+
+    if response.status_code != 200:
+        return public_status_messages.get('error_unexpected')
+    return response.json()
+
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))
