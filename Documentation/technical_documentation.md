@@ -221,4 +221,21 @@ TODO: AGREGAR LA INSCRIPCIÓN A SUSCRIPCIÓN JUNTO CON MODIFICACIÓN DE SUSCRIPC
 
 # Payments
 
+## Introducción
+&nbsp;&nbsp;&nbsp;&nbsp;Para el servicio de Payments se tomó el [repositorio de la materia](https://github.com/taller-de-programacion-2/basic_payment_sc) con el smart contract como punto de partida y se fue adaptando para tener las funcionalidades requeridas. Este servicio se encarga de manejar todo aquello relacionado con las operaciones de pagos del sistema. A continuación se dará una explicacion mas detallada del servicio.
+
+## Base de datos
+Para el servicio Payments decidimos utilizar la misma base de datos que Business agregándole una nueva tabla con el mismo nombre que nuestro servicio. Allí se almacenan los datos de las billeteras de los usuarios y todas las transacciones realizadas por el servicio. 
+
+## Bibliotecas
+
+Las bibliotecas mas importantes usadas por este servicio fueron:
+- Mongodb: Para la interaccion con la base de datos.
+- Fastify: Web framework para procesar las requests provinientes de Api Gateway y Business.
+- hardhat: Para deployar el smart contract
+- ethers: Utilidades varias para interactuar con el smart contract
+- axios: Para enviar requests al backend
+
+## Funcionalidades
+
 
