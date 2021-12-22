@@ -899,7 +899,7 @@ async def logout(request: Request, current_user: dict = Depends(get_current_user
     logger.info(f"Received POST request at /logout with body {request_json}")
 
     response = requests.post(
-        USERS_BACKEND_URL + f'/log_out'
+        USERS_BACKEND_URL + f'/log_out', json = request_json
     )
 
     if response.status_code != 200:
