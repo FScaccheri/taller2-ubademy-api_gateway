@@ -612,7 +612,9 @@ async def users_count():
     return {"status": "ok", "count": 15}
 
 
-@app.post('/admin_login', tags = ['admin_login'])
+@app.post('/admin_login',
+    tags = ['admin_login']
+)
 async def admin_login(request: Request):
     request_json = await request.json()
     response = requests.post(USERS_BACKEND_URL + request.url.path, json=request_json)
@@ -639,7 +641,9 @@ async def admin_login(request: Request):
     }
 
 
-@app.post('/admin_register')
+@app.post('/admin_register',
+    tags = ['admin_register']
+)
 async def admin_register(request: Request, _token=Depends(authenticate_admin_token)):
     response = requests.post(USERS_BACKEND_URL + '/admin_create/', json=await request.json())
     if response.status_code != 200:
@@ -647,7 +651,9 @@ async def admin_register(request: Request, _token=Depends(authenticate_admin_tok
     return response.json()
 
 
-@app.get('/get_all_users')
+@app.get('/get_all_users',
+    tags = ['get_all_users']
+)
 async def get_all_users(current_user: dict = Depends(get_current_user)):
     is_admin = "false"
     if current_user.is_admin:
@@ -666,7 +672,9 @@ async def business_ping():
     return response.json()
 
 
-@app.get('/courses/data/{course_id}', tags = ['courses/data/course_id'])
+@app.get('/courses/data/{course_id}',
+    tags = ['courses/data/course_id']
+)
 async def get_course(request: Request, course_id: str, token_data=Depends(authenticate_token)):
     # TODO: Agregar el current_user.email al final del url como url param
     privilege: str = 'admin' if token_data.is_admin else 'user'
@@ -677,7 +685,9 @@ async def get_course(request: Request, course_id: str, token_data=Depends(authen
     return response.json()
 
 
-@app.post('/courses/create_course', tags = ['courses/create_course'])
+@app.post('/courses/create_course',
+    tags = ['courses/create_course']
+)
 async def create_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['email'] = current_user.email
@@ -688,7 +698,9 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
     return response.json()
 
 
-@app.put('/courses/update_course', tags = ['courses/update_course'])
+@app.put('/courses/update_course',
+    tags = ['courses/update_course']
+)
 async def update_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['email'] = current_user.email
@@ -699,7 +711,9 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
     return response.json()
 
 
-@app.post('/courses/subscribe', tags = ['courses/subscribe'])
+@app.post('/courses/subscribe',
+    tags = ['courses/subscribe']
+)
 async def subscribe_to_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['user_email'] = current_user.email
@@ -713,7 +727,9 @@ async def subscribe_to_course(request: Request, current_user: dict = Depends(get
     return response.json()
 
 
-@app.post('/courses/unsubscribe', tags = ['courses/unsubscribe'])
+@app.post('/courses/unsubscribe',
+    tags = ['courses/unsubscribe']
+)
 async def unsubscribe_to_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['user_email'] = current_user.email
