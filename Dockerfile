@@ -8,6 +8,8 @@ ENV PORT=8000
 
 ENV BUSINESS_BACKEND_URL='http://backend_business:8002'
 
+ENV PAYMENTS_BACKEND_URL='http://backend_payments:8003'
+
 EXPOSE $PORT
 
 RUN pip install -r requirements.txt

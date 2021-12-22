@@ -45,7 +45,7 @@ def test_failed_create_exam(mock_create_exam):
     assert 'message' in response_data
 
 
-@patch('main.requests.put')
+@patch('main.requests.post')
 def test_edit_exam(mock_edit_exam):
     mock_edit_exam.return_value = MagicMock(status_code=200)
     mock_edit_exam.return_value.json.return_value = {
@@ -67,7 +67,7 @@ def test_edit_exam(mock_edit_exam):
     assert response_data['status'] == 'ok'
 
 
-@patch('main.requests.put')
+@patch('main.requests.post')
 def test_failed_edit_exam(mock_edit_exam):
     mock_edit_exam.return_value = MagicMock(status_code=200)
     mock_edit_exam.return_value.json.return_value = {

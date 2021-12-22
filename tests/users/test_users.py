@@ -36,7 +36,10 @@ def test_successful_login(mock_users_login):
 @patch('main.requests.post')
 def test_failed_login(mock_users_login):
     mock_users_login.return_value = MagicMock(status_code=200)
-    mock_users_login.return_value.json.return_value = {'status': 'error'}
+    mock_users_login.return_value.json.return_value = {
+        'status': 'error',
+        'message': 'error_bad_login'
+    }
 
     response = client.post('/login', json={
         'email': 'non_existent_mail@mail.com',
