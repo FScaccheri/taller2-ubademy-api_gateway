@@ -2,6 +2,8 @@
 
 ## __POST /wallet__
 
+Crea una nueva wallet(address y private key)
+
 Parameters: None
 
 Request Body: 
@@ -17,9 +19,12 @@ Responses:
 
 ## __GET /wallet/:email__
 
+Devuelve informacion (address y balance) de la wallet de un usuario
+
 Parameters: email
 
 Request Body: None
+
 Responses:
 
 * success => {"address":string, "balance":string}
@@ -30,6 +35,8 @@ Responses:
 
 ## __POST /deposit__
 
+Hace un deposito desde la wallet de un usuario al smart contract. Si el pago es exitoso guarda la transaccion en la base de datos y manda una request a Business para actualizarle la suscripcion al usuario
+
 Parameters: None
 
 Request Body: 
@@ -38,7 +45,6 @@ Request Body:
 amountInEthers: string
 newSubscription: string
 }
-
 
 Responses:
 
@@ -54,6 +60,8 @@ Responses:
 
 
 ## __POST /pay_creator__
+
+Hace un deposito desde el smart contract a la wallet de un usuario. Si el pago es exitoso guarda la transaccion en la base de datos
 
 Parameters: None
 
@@ -79,6 +87,8 @@ Responses:
 
 ## __GET /last_deposit/:email__
 
+Devuelve (si existe) el ultimo deposito de un usuario
+
 Parameters: email
 
 Request Body: None
@@ -92,6 +102,8 @@ Responses:
 * error => {"status":"error", "message":"Could not get last deposit"}
 
 ## __GET /deposits/:email__
+
+Devuelve depositos del sistema. Si email es "all" devuelve todos. Si es el mail de un usuario devuelve los depositos en los que el usuario sea sender o receiver.
 
 Parameters: email
 
