@@ -1,5 +1,7 @@
 # taller2-ubademy-api_gateway
 
+[![codecov](https://codecov.io/gh/FScaccheri/taller2-ubademy-api_gateway/branch/main/graph/badge.svg?token=6CCHXVR4Q3)](https://codecov.io/gh/FScaccheri/taller2-ubademy-api_gateway)
+
 API Gateway para el Trabajo Practico de Taller de Programacion 2: Ubademy.
 
 ### Dependencias
