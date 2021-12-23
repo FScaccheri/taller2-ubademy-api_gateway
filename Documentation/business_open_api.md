@@ -512,3 +512,54 @@ Responses:
 * success => {"status":"ok", "message": ..., "course_genres": locations_list }
 
 * error => {"status":"error", "message": ... }
+
+## __GET /profiles/:user_email/:account_type/:profile_email
+
+Request Body: None
+
+Description: 
+Retorna los datos de un perfil del usuario de mail profile_email. Utiliza user_email y account_type para verificar
+a qué tipo de información puede acceder el usuario que esta pidiendo el perfil. Un administrador puede acceder a 
+toda la información de cualquier perfil. Un usuario puede acceder a toda la información de su propio perfil, y 
+únicamente a la información pública de los perfiles de otros usuarios.
+
+Responses:
+
+* success => {"status":"ok", "message": ..., "profile": profile_to_send }
+
+* error => {"status":"error", "message": ... }
+
+## __POST /profiles/subscribe_to_course__
+
+Request Body:  
+    { 
+    course_id: String,  
+    user_email: String }
+
+Description:
+Suscribe al usuario de mail user_email al curso de id course_id si el tipo de suscripción al que está inscripto es de nivel
+igual o mayor al del curso al que se está suscribiendo, sino retorna un mensaje de error. Envía un mensaje de error también en
+caso de que el usuario o el curso no existan.
+
+Responses:
+
+* success => {"status":"ok", "message": ... }
+
+* error => {"status":"error", "message": ... }
+
+## __POST /profiles/unsubscribe_from_course__
+
+Request Body:  
+    { 
+    course_id: String,  
+    user_email: String }
+
+Description:
+Desususcribe al usuario de mail user_email al curso de id course_id. Envía un mensaje de error también en
+caso de que el usuario o el curso no existan.
+
+Responses:
+
+* success => {"status":"ok", "message": ... }
+
+* error => {"status":"error", "message": ... }
