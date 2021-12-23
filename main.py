@@ -18,6 +18,8 @@ from models.users import CurrentUser
 from exceptions.expired_credentials_exception import ExpiredCredentialsException
 from exceptions.invalid_credentials_exception import InvalidCredentialsException
 
+from config_files.fastapi_metadata import tags_metadata
+
 from utils.logger import Logger
 
 SECRET_KEY = '944211eb42c3b243739503a1d36225a91317cffe7d1b445add87920b380ddae5'
@@ -33,7 +35,8 @@ GOOGLE_OAUTH_URL = 'https://www.googleapis.com/oauth2/v3'
 COURSES_PREFIX = '/courses'
 PROFILES_PREFIX = '/profiles'
 
-app = FastAPI()
+
+app = FastAPI(openapi_tags=tags_metadata)
 
 app.add_middleware(
     CORSMiddleware,
@@ -125,7 +128,7 @@ async def users_ping():
     return response.json()
 
 
-@app.post('/login')
+@app.post('/login', tags=['login'])
 # Request: https://www.starlette.io/requests/
 async def login(request: Request):
     # The documentation uses data instead of json but it is not updated
@@ -171,7 +174,7 @@ async def login(request: Request):
     }
 
 
-@app.post('/sign_up')
+@app.post('/sign_up', tags=['sign_up'])
 async def sign_up(request: Request):
     request_json = await request.json()
     logger.info(f"POST request received at /sign_up with email: {request_json['email']}")
@@ -214,7 +217,7 @@ async def sign_up(request: Request):
     }
 
 
-@app.post('/oauth_login')
+@app.post('/oauth_login', tags=['oauth_login'])
 async def oauth_login(request: Request):
     request_json = await request.json()
     request_email = request_json['email']
@@ -269,12 +272,15 @@ async def oauth_login(request: Request):
 # BACKOFFICE ENDPOINTS
 
 
-@app.get('/admin/users_count', dependencies=[Depends(authenticate_admin_token)])
+@app.get('/admin/users_count',
+         dependencies=[Depends(authenticate_admin_token)],
+         tags=['admin/users_count'])
 async def users_count():
     return {"status": "ok", "count": 15}
 
 
-@app.post('/admin_login')
+@app.post('/admin_login',
+          tags=['admin_login'])
 async def admin_login(request: Request):
     request_json = await request.json()
     logger.info(f"Received POST request at /admin_login with email: {request_json['email']}")
@@ -305,7 +311,8 @@ async def admin_login(request: Request):
     }
 
 
-@app.post('/admin_register')
+@app.post('/admin_register',
+          tags=['admin_register'])
 async def admin_register(request: Request, _token=Depends(authenticate_admin_token)):
     request_json = await request.json()
     logger.info(f"Received POST request at /admin_register with email: {request_json['email']}")
@@ -318,7 +325,8 @@ async def admin_register(request: Request, _token=Depends(authenticate_admin_tok
     return response.json()
 
 
-@app.get('/get_all_users')
+@app.get('/get_all_users',
+         tags=['get_all_users'])
 async def get_all_users(current_user: dict = Depends(get_current_user)):
     logger.info("Received GET request at /get_all_users")
     is_admin = "false"
@@ -342,7 +350,8 @@ async def business_ping():
     return response.json()
 
 
-@app.get('/courses/data/{course_id}')
+@app.get('/courses/data/{course_id}',
+         tags=['courses/data/course_id'])
 async def get_course(request: Request, course_id: str, token_data=Depends(authenticate_token)):
     logger.info(f"Received GET request at /courses/data/{course_id}")
     # TODO: Agregar el current_user.email al final del url como url param
@@ -357,7 +366,8 @@ async def get_course(request: Request, course_id: str, token_data=Depends(authen
     return response.json()
 
 
-@app.post('/courses/create_course')
+@app.post('/courses/create_course',
+          tags=['courses/create_course'])
 async def create_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     logger.info(f"Received POST request at /courses/create_course with body {request_json}")
@@ -372,7 +382,8 @@ async def create_course(request: Request, current_user: dict = Depends(get_curre
     return response.json()
 
 
-@app.put('/courses/update_course')
+@app.put('/courses/update_course',
+         tags=['courses/update_course'])
 async def update_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     logger.info(f"Received PUT request at /courses/create_course with body {request_json}")
@@ -387,7 +398,8 @@ async def update_course(request: Request, current_user: dict = Depends(get_curre
     return response.json()
 
 
-@app.post('/courses/subscribe')
+@app.post('/courses/subscribe',
+          tags=['courses/subscribe'])
 async def subscribe_to_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     logger.info(f"Received POST request at /courses/subscribe with body {request_json}")
@@ -406,7 +418,8 @@ async def subscribe_to_course(request: Request, current_user: dict = Depends(get
     return response.json()
 
 
-@app.post('/courses/unsubscribe')
+@app.post('/courses/unsubscribe',
+          tags=['courses/unsubscribe'])
 async def unsubscribe_to_course(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     logger.info(f"Received POST request at /courses/unsubscribe with body {request_json}")
@@ -425,7 +438,9 @@ async def unsubscribe_to_course(request: Request, current_user: dict = Depends(g
     return response.json()
 
 
-@app.get('/courses/{course_id}/students', dependencies=[Depends(get_current_user)])
+@app.get('/courses/{course_id}/students',
+         dependencies=[Depends(get_current_user)],
+         tags=['courses/course_id/students'])
 async def course_students(course_id: str):
     logger.info(f"Received GET request at /courses/{course_id}/students")
     response = requests.get(
@@ -440,7 +455,8 @@ async def course_students(course_id: str):
     return response.json()
 
 
-@app.get('/courses/{course_id}/{exam_name}/students')
+@app.get('/courses/{course_id}/{exam_name}/students',
+         tags=['courses/course_id/exam_name/students'])
 async def course_exam_students(course_id: str,
                                exam_name: str,
                                current_user=Depends(get_current_user)):
@@ -455,9 +471,10 @@ async def course_exam_students(course_id: str,
     return response.json()
 
 
-@app.get('/courses/{course_id}/exams/{exam_filter}')
+@app.get('/courses/{course_id}/exams/{exam_filter}',
+         tags=['courses/course_id/exams/filter'])
 async def course_exams(course_id: str, exam_filter: str, current_user=Depends(get_current_user)):
-    logger.info(f"Received GET request at /courses/{course_id}/exams/{filter}")
+    logger.info(f"Received GET request at /courses/{course_id}/exams/{exam_filter}")
     request_url = BUSINESS_BACKEND_URL + COURSES_PREFIX \
         + f'/exams/{course_id}/{exam_filter}/{current_user.email}'
     response = requests.get(request_url)
@@ -467,7 +484,8 @@ async def course_exams(course_id: str, exam_filter: str, current_user=Depends(ge
     return response.json()
 
 
-@app.get('/courses/{course_id}/students_exams/{exam_filter}')
+@app.get('/courses/{course_id}/students_exams/{exam_filter}',
+         tags=['courses/course_id/students_exams/exam_filter'])
 async def student_exams(course_id: str, exam_filter: str, current_user=Depends(get_current_user)):
     logger.info(f"Received GET request at /courses/{course_id}/students_exams/{exam_filter}")
     request_url = BUSINESS_BACKEND_URL + COURSES_PREFIX \
@@ -479,7 +497,8 @@ async def student_exams(course_id: str, exam_filter: str, current_user=Depends(g
     return response.json()
 
 
-@app.get('/courses/{course_id}/exam/{exam_name}/{exam_filter}/{student_email}')
+@app.get('/courses/{course_id}/exam/{exam_name}/{exam_filter}/{student_email}',
+         tags=['courses/course_id/exam/exam_name/exam_filter/student_email'])
 async def get_course_exam(
         course_id: str, exam_name: str, exam_filter: str, student_email: str,
         current_user=Depends(get_current_user)
@@ -495,7 +514,8 @@ async def get_course_exam(
     return response.json()
 
 
-@app.get('/search_courses/{course_type}/{subscription_type}')
+@app.get('/search_courses/{course_type}/{subscription_type}',
+         tags=['search_courses/course_type/subscription_type'])
 async def search_courses(course_type: str,
                          subscription_type: str,
                          current_user: str = Depends(get_current_user)):
@@ -512,7 +532,8 @@ async def search_courses(course_type: str,
     return response.json()
 
 
-@app.post('/courses/create_exam')
+@app.post('/courses/create_exam',
+          tags=['courses/create_exam'])
 async def create_exam(request: Request, token: str = Depends(authenticate_token)):
     request_json = await request.json()
     logger.info(f"Received POST request at /courses/create_exam with body {request_json}")
@@ -528,7 +549,8 @@ async def create_exam(request: Request, token: str = Depends(authenticate_token)
     return response.json()
 
 
-@app.put('/courses/edit_exam')
+@app.put('/courses/edit_exam',
+         tags=['courses/edit_exam'])
 async def edit_exam(request: Request, token: str = Depends(authenticate_token)):
     request_json = await request.json()
     logger.info(f"Received PUT request at /courses/edit_exam with body {request_json}")
@@ -544,7 +566,8 @@ async def edit_exam(request: Request, token: str = Depends(authenticate_token)):
     return response.json()
 
 
-@app.post('/courses/publish_exam')
+@app.post('/courses/publish_exam',
+          tags=['courses/publish_exam'])
 async def publish_exam(request: Request, token: str = Depends(authenticate_token)):
     request_json = await request.json()
     logger.info(f"Received POST request at /courses/publish_exam with body {request_json}")
@@ -562,7 +585,8 @@ async def publish_exam(request: Request, token: str = Depends(authenticate_token
     return response.json()
 
 
-@app.post('/courses/grade_exam')
+@app.post('/courses/grade_exam',
+          tags=['courses/grade_exam'])
 async def grade_exam(request: Request, token: str = Depends(authenticate_token)):
     request_json = await request.json()
     logger.info(f"Received POST request at /course/grade_exam with body {request_json}")
@@ -580,7 +604,8 @@ async def grade_exam(request: Request, token: str = Depends(authenticate_token))
     return response.json()
 
 
-@app.post('/courses/complete_exam')
+@app.post('/courses/complete_exam',
+          tags=['courses/complete_exam'])
 async def complete_exam(request: Request, current_user: str = Depends(get_current_user)):
     request_json = await request.json()
     logger.info(f"Received POST request at /courses/compelte_exam with body {request_json}")
@@ -598,7 +623,8 @@ async def complete_exam(request: Request, current_user: str = Depends(get_curren
     return response.json()
 
 
-@app.post('/courses/add_collaborator')
+@app.post('/courses/add_collaborator',
+          tags=['courses/add_collaborator'])
 async def add_collaborator(request: Request, current_user: str = Depends(get_current_user)):
     request_json = await request.json()
     logger.info(f"Received POST request at /courses/add_collaborator with body {request_json}")
@@ -616,7 +642,8 @@ async def add_collaborator(request: Request, current_user: str = Depends(get_cur
     return response.json()
 
 
-@app.get('/profile_setup')
+@app.get('/profile_setup',
+         tags=['profile_setup'])
 async def profile_setup():
     logger.info("Received GET request at /profile_setup")
     countries_response = requests.get(BUSINESS_BACKEND_URL + PROFILES_PREFIX + '/countries')
@@ -641,7 +668,8 @@ async def profile_setup():
     }
 
 
-@app.get('/course_setup')
+@app.get('/course_setup',
+         tags=['course_setup'])
 async def course_setup():
     logger.info("Received GET request at /course_setup")
     # TODO: A lot of repeated code from profile_setup
@@ -682,7 +710,8 @@ async def course_setup():
     }
 
 
-@app.put('/update_profile')
+@app.put('/update_profile',
+         tags=['update_profile'])
 async def udpate_profile(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     logger.info(f"Received PUT request at /update_profile with body {request_json}")
@@ -700,7 +729,8 @@ async def udpate_profile(request: Request, current_user: dict = Depends(get_curr
     return response.json()
 
 
-@app.get('/profile/{profile_email}')
+@app.get('/profile/{profile_email}',
+         tags=['profile/profile_email'])
 async def get_profile(profile_email: str, token_data=Depends(authenticate_token)):
     logger.info(f"Received GET request at /profile/{profile_email}")
     privilege: str = 'admin' if token_data.is_admin else 'user'
@@ -716,7 +746,8 @@ async def get_profile(profile_email: str, token_data=Depends(authenticate_token)
 
 
 # SUBSCRIPTION ENDPOINTS
-@app.post('/modify_subscription')
+@app.post('/modify_subscription',
+          tags=['modify_subscription'])
 async def modify_subscription(request: Request, current_user: dict = Depends(get_current_user)):
     # Should have the new subscription wanted(Silver, Gold, Platinum)
     request_json = await request.json()
@@ -735,7 +766,8 @@ async def modify_subscription(request: Request, current_user: dict = Depends(get
     return response.json()
 
 
-@app.post('/pay_subscription')
+@app.post('/pay_subscription',
+          tags=['pay_subscription'])
 async def pay_subscription(request: Request, current_user: dict = Depends(get_current_user)):
     # Should have the new subscription wanted(Silver, Gold, Platinum)
     request_json = await request.json()
@@ -754,6 +786,7 @@ async def pay_subscription(request: Request, current_user: dict = Depends(get_cu
         return {"status": "error", "message": response_json["message"]}
     return response_json
 
+
 @app.get('/deposits/{email}', dependencies=[Depends(authenticate_admin_token)])#El email es para el filtro. Si es all devuelve todas las transacciones
 async def get_deposits(request: Request, email: str):
     response = requests.get(PAYMENTS_BACKEND_URL + f"/deposits/{email}")
@@ -762,7 +795,8 @@ async def get_deposits(request: Request, email: str):
 
     return response.json()
 
-@app.get('/my_courses')
+@app.get('/my_courses',
+         tags=['my_courses'])
 async def my_courses(request: Request, current_user: dict = Depends(get_current_user)):
     logger.info("Received GET request at /my_courses")
 
@@ -773,6 +807,7 @@ async def my_courses(request: Request, current_user: dict = Depends(get_current_
         logger.error(f"Error making GET request at {request_url}")
         return public_status_messages.get('error_unexpected')
     return response.json()
+
 
 @app.get('/user_courses/{user_email}', dependencies=[Depends(authenticate_admin_token)])
 async def user_courses(request: Request, user_email: str):
@@ -787,7 +822,8 @@ async def user_courses(request: Request, user_email: str):
     return response.json()
 
 
-@app.get('/course_genres')
+@app.get('/course_genres',
+         tags=['course_genres'])
 async def course_genres(request: Request, current_user: dict = Depends(get_current_user)):
     logger.info("Received GET request at /course_genres")
 
@@ -799,7 +835,8 @@ async def course_genres(request: Request, current_user: dict = Depends(get_curre
     return response.json()
 
 
-@app.get('/subscription_types')
+@app.get('/subscription_types',
+         tags=['subscription_types'])
 async def subscription_types(request: Request, current_user: dict = Depends(get_current_user)):
     logger.info("Received GET request at /subscription_types")
 
@@ -811,7 +848,8 @@ async def subscription_types(request: Request, current_user: dict = Depends(get_
     return response.json()
 
 
-@app.get('/courses/passing')
+@app.get('/courses/passing',
+         tags=['courses/passing'])
 async def get_passing_courses(current_user=Depends(get_current_user)):
     logger.info("Received GET request at /courses/passing")
     request_url = BUSINESS_BACKEND_URL + COURSES_PREFIX + f'/passing_courses/{current_user.email}'
@@ -822,7 +860,9 @@ async def get_passing_courses(current_user=Depends(get_current_user)):
     return response.json()
 
 
-@app.post('/change_blocked_status', dependencies=[Depends(authenticate_token)])
+@app.post('/change_blocked_status',
+          dependencies=[Depends(authenticate_token)],
+          tags=['change_blocked_status'])
 async def change_blocked_status(request: Request):
     # Should have the new subscription wanted(Silver, Gold, Platinum)
     request_json = await request.json()
@@ -840,7 +880,8 @@ async def change_blocked_status(request: Request):
     return response_json
 
 
-@app.post('/grade_course')
+@app.post('/grade_course',
+          tags=['grade_course'])
 async def grade_course(request: Request, current_user=Depends(get_current_user)):
     request_json = await request.json()
     logger.info(f"Received POST request at /grade_course with body {request_json}")
@@ -859,7 +900,9 @@ async def grade_course(request: Request, current_user=Depends(get_current_user))
     return response_json
 
 
-@app.get('/student_gradings/{student_id}', dependencies=[Depends(authenticate_token)])
+@app.get('/student_gradings/{student_id}',
+         dependencies=[Depends(authenticate_token)],
+         tags=['student_gradings/id'])
 async def get_student_gradings(student_id: str):
     logger.info(f"Received GET request at /student_gradings{student_id}")
     response = requests.get(
@@ -874,7 +917,9 @@ async def get_student_gradings(student_id: str):
     return response.json()
 
 
-@app.get('/users_metrics', dependencies=[Depends(authenticate_admin_token)])
+@app.get('/users_metrics',
+         dependencies=[Depends(authenticate_admin_token)],
+         tags=['/users_metrics'])
 async def users_metrics():
     logger.info("Received GET request at /users_metrics")
     response = requests.get(
@@ -888,7 +933,8 @@ async def users_metrics():
     return response.json()
 
 
-@app.post('/send_message')
+@app.post('/send_message',
+          tags=['/send_message'])
 async def send_message(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = await request.json()
     request_json['email'] = current_user.email
@@ -903,7 +949,9 @@ async def send_message(request: Request, current_user: dict = Depends(get_curren
         return public_status_messages.get('error_unexpected')
     return response.json()
 
-@app.post('/logout')
+
+@app.post('/logout',
+          tags=['/logout'])
 async def logout(request: Request, current_user: dict = Depends(get_current_user)):
     request_json = {'email': current_user.email}
     logger.info(f"Received POST request at /logout with body {request_json}")
