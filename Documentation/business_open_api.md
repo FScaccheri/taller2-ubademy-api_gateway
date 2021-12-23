@@ -336,3 +336,24 @@ Responses:
 * success => {"status":"ok", "message": ..., "gradings": [] }
 
 * error => {"status":"error", "message": ... }
+
+## __POST /profiles/crete__
+
+Request Body:  
+    { 
+    name: string  
+    profile_picture_link: string  
+    email: string  
+    country: string  
+    subscription_type: string | undefined  
+    interesting_genres: string[] }
+
+Description:
+Agrega la opinion del usuario user_email a la lista de opiniones del curso. Retorna error si el usuario ya había realizado una review anterior
+o si no es un alumno inscripto en el curso. Recibe un comentario sobre el curso y una nota numérica para puntuarlo.
+
+Responses:
+
+* success => {"status":"ok", "message": ... }
+
+* error => {"status":"error", "message": ... }
