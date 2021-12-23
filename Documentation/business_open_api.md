@@ -248,3 +248,22 @@ Responses:
 * success => {"status":"ok", "message": ..., "exams": students_exams_list }
 
 * error => {"status":"error", "message": ... }
+
+## __POST /courses/add_collaborator__
+
+Request Body:  
+    { 
+    course_id: String,  
+    user_email: String,  
+    collaborator_email: String }
+
+Description:
+Agrega a un curso el usuario como colaborador. Esto puede hacerse solo si el colaborador a agegar no es un estudiante del curso o el creador. 
+Si user_email no es del creador del curso entonces se rechaza el pedido.
+
+Responses:
+
+* success => {"status":"ok", "message": ... }
+
+* error => {"status":"error", "message": ... }
+
