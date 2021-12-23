@@ -1,6 +1,12 @@
 # Introducción
 &nbsp;&nbsp;&nbsp;&nbsp;A lo largo del cuatrimestre se estuvo implementando un programa llamado "Ubademy", un clon de sitios de clases online. Para lograrlo se utilizó una arquitectura de microservicios, utilizando el patrón de Api Gateway. A continuación se explicarán tecnicismos de la aplicación tanto en forma macroscópica como microscópica.
 
+Se aclara que las documentaciones de open api de los servicios se encuentran en los siguientes lugares:
+- Api Gateway: https://ubademy-api-gate.herokuapp.com/docs
+- Users: https://ubademy-users-backend.herokuapp.com/docs
+- Business: Este repositorio, en Documentation/business_open_api.md
+- Payments: Este repositorio, en Documentation/payments_open_api.md
+
 
 # Api gateway
 &nbsp;&nbsp;&nbsp;&nbsp;El servicio de Api Gateway fue implementado utilizando el lenguaje de programación Python, junto con una cantidad de bibliotecas excternas que facilitaron la contrsucción del backend. Su razón de ser es delegar los distintos procesos a realizar en los backends correspondientes. las bibliotecas utilizadas son:  
