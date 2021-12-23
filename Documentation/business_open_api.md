@@ -311,10 +311,28 @@ Request Body:
 
 Description:
 Agrega la opinion del usuario user_email a la lista de opiniones del curso. Retorna error si el usuario ya había realizado una review anterior
-o si no es un alumno inscripto en el curso.
+o si no es un alumno inscripto en el curso. Recibe un comentario sobre el curso y una nota numérica para puntuarlo.
 
 Responses:
 
 * success => {"status":"ok", "message": ... }
+
+* error => {"status":"error", "message": ... }
+
+## __GET /courses/students_gradings/:id__
+
+Parameters: id
+
+Request Body: None
+
+Description: 
+Retorna una lista con las opiniones del curso recibido, guardando en cada elemento el mail del estudiante que la realizó, su comentario, y la nota
+que le asignó al curso, retorna también un número que es el promedio de todas las notas que los estudiantes le asignaron al curso (si tiene al menos
+una opinión).
+
+Responses:
+
+* success => {"status":"ok", "message": ..., "gradings": students_gradings, "average": course_average }
+* success => {"status":"ok", "message": ..., "gradings": [] }
 
 * error => {"status":"error", "message": ... }
