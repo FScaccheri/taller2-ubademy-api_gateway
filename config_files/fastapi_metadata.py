@@ -370,4 +370,23 @@ tags_metadata = [
         the rating and a list of reviews.
         """
     },
+    {
+        "name": "/users_metrics",
+        "description": """Endpoint to fetch user related metrics.
+        User metrics are: users amount, blocked users, non-blocked users, 
+        last registered users, last logged users, last registered google users and 
+        last logger google users.
+        """
+    },
+    {
+        "name": "/send_message",
+        "description": """Endpoint to send a private message to another user in
+        the app.
+        """
+    },
+{
+        "name": "/logout",
+        "description": """Endpoint used to log a user out from the app.
+        """
+    }
 ]
