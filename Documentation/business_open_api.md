@@ -349,11 +349,166 @@ Request Body:
     interesting_genres: string[] }
 
 Description:
-Agrega la opinion del usuario user_email a la lista de opiniones del curso. Retorna error si el usuario ya había realizado una review anterior
-o si no es un alumno inscripto en el curso. Recibe un comentario sobre el curso y una nota numérica para puntuarlo.
+Crea un perfil para el usuario, inicializándolo con los datos recibidos en el schema. Retorna error en caso de que el perfil ya existiera 
+previamente (se repite el email).
 
 Responses:
 
 * success => {"status":"ok", "message": ... }
+
+* error => {"status":"error", "message": ... }
+
+## __POST /profiles/update__
+
+Request Body:  
+    { 
+    name: string  
+    profile_picture_link: string  
+    email: string  
+    country: string  
+    interesting_genres: string[] }
+
+Description:
+Actualiza el perfil del usuario con el mail recibido, actualizando el resto de los datos guardados en el body.
+
+Responses:
+
+* success => {"status":"ok", "message": ... }
+
+* error => {"status":"error", "message": ... }
+
+## __POST /profiles/upgrade_subscription__
+
+IVI
+
+Request Body:  
+    { 
+    name: string  
+    profile_picture_link: string  
+    email: string  
+    country: string  
+    interesting_genres: string[] }
+
+Description:
+Actualiza el perfil del usuario con el mail recibido, actualizando el resto de los datos guardados en el body.
+
+Responses:
+
+* success => {"status":"ok", "message": ... }
+
+* error => {"status":"error", "message": ... }
+
+## __POST /profiles/modify_subscription__
+
+IVI
+
+Request Body:  
+    { 
+    name: string  
+    profile_picture_link: string  
+    email: string  
+    country: string  
+    interesting_genres: string[] }
+
+Description:
+Actualiza el perfil del usuario con el mail recibido, actualizando el resto de los datos guardados en el body.
+
+Responses:
+
+* success => {"status":"ok", "message": ... }
+
+* error => {"status":"error", "message": ... }
+
+## __POST /profiles/pay_subscription__
+
+IVI
+
+Request Body:  
+    { 
+    name: string  
+    profile_picture_link: string  
+    email: string  
+    country: string  
+    interesting_genres: string[] }
+
+Description:
+Actualiza el perfil del usuario con el mail recibido, actualizando el resto de los datos guardados en el body.
+
+Responses:
+
+* success => {"status":"ok", "message": ... }
+
+* error => {"status":"error", "message": ... }
+
+## __POST /profiles/validate_subscription__
+
+IVI
+
+Request Body:  
+    { 
+    name: string  
+    profile_picture_link: string  
+    email: string  
+    country: string  
+    interesting_genres: string[] }
+
+Description:
+Actualiza el perfil del usuario con el mail recibido, actualizando el resto de los datos guardados en el body.
+
+Responses:
+
+* success => {"status":"ok", "message": ... }
+
+* error => {"status":"error", "message": ... }
+
+## __GET /profiles/countries
+
+Request Body: None
+
+Description: 
+Retorna una lista con los nombres de los paises que acepta la aplicación.
+
+Responses:
+
+* success => {"status":"ok", "message": ..., "locations": locations_list }
+
+* error => {"status":"error", "message": ... }
+
+## __GET /profiles/course_genres
+
+Request Body: None
+
+Description: 
+Retorna una lista con los tipos de cursos que acepta la aplicación.
+
+Responses:
+
+* success => {"status":"ok", "message": ..., "course_genres": locations_list }
+
+* error => {"status":"error", "message": ... }
+
+## __GET /profiles/subscription_types
+
+Request Body: None
+
+Description: 
+Retorna una lista con los nombres y precios de los tipos de suscripción que ofrece la aplicación.
+
+Responses:
+
+* success => {"status":"ok", "message": ..., "course_genres": locations_list }
+
+* error => {"status":"error", "message": ... }
+
+## __GET /profiles/subscription_types_names
+
+Request Body: None
+
+Description: 
+Retorna una lista con los nombres de los tipos de suscripción que ofrece la aplicación.
+
+Responses:
+
+* success => {"status":"ok", "message": ..., "course_genres": locations_list }
 
 * error => {"status":"error", "message": ... }
