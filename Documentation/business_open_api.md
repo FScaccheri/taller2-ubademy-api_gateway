@@ -211,3 +211,40 @@ Responses:
 * success => {"status":"ok", "message": ..., "courses": exams_list }
 
 * error => {"status":"error", "message": ... }
+
+
+## __GET /courses/:id/students_exams/:email/:filter__
+
+Parameters: id, filter, user_email
+
+Request Body: None
+
+Description: 
+Retorna una lista con los exámenes rendidos por los alumnos del curso, indicando el mail del alumno que lo rindió, el nombre del examen rendido y
+si el examen fue corregido o no ("Graded" o "Not graded"). Si el usuario que pide esta información no es un docente del curso entonces se rechaza el pedido
+
+Responses:
+
+* success => {"status":"ok", "message": ..., "exams": students_exams_list }
+
+* error => {"status":"error", "message": ... }
+
+
+## __GET /courses/:id/exam/:email/:exam_name/:projection/:student_email__
+
+Parameters: id, email, exam_name, projection, student_email
+
+Request Body: None
+
+Description: 
+Retorna la información de un examen particular, dependiendo de quién sea el que lo está pidiendo. Si email pertenece a un alumno del curso, entonces
+solo podrá pedir exámenes suyos, sino se rechazará el pedido (si email != student_email). Si el email es de un docente del curso, entonces puede acceder 
+a la información de cualquier examen de este. El parámetro projection indica qué información se quiere ver del examen, si es "quiestions" entonces retornará
+el enunciado del examen (en ese caso se ignora el parámetro student_email), si es completed_exam entonces se retornará el examen completado (preguntas, respuestas
+del alumno, y correcciones del docente junto con la nota si es que fue corregido).
+
+Responses:
+
+* success => {"status":"ok", "message": ..., "exams": students_exams_list }
+
+* error => {"status":"error", "message": ... }
