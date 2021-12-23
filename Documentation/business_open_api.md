@@ -379,18 +379,13 @@ Responses:
 
 ## __POST /profiles/upgrade_subscription__
 
-IVI
-
 Request Body:  
     { 
-    name: string  
-    profile_picture_link: string  
-    email: string  
-    country: string  
-    interesting_genres: string[] }
+    email: string
+    new_subscription: string }
 
 Description:
-Actualiza el perfil del usuario con el mail recibido, actualizando el resto de los datos guardados en el body.
+Modifica la suscripcion del usuario para que tenga el valor de new_subscription.
 
 Responses:
 
@@ -400,18 +395,13 @@ Responses:
 
 ## __POST /profiles/modify_subscription__
 
-IVI
-
 Request Body:  
     { 
-    name: string  
-    profile_picture_link: string  
-    email: string  
-    country: string  
-    interesting_genres: string[] }
+    email: string
+    new_subscription: string }
 
 Description:
-Actualiza el perfil del usuario con el mail recibido, actualizando el resto de los datos guardados en el body.
+Si new_subscription es menor a la suscripcion actual del usuario la modifica. Si es mayor se devuelve la cantidad que se debe pagar.
 
 Responses:
 
@@ -421,18 +411,14 @@ Responses:
 
 ## __POST /profiles/pay_subscription__
 
-IVI
-
 Request Body:  
     { 
-    name: string  
-    profile_picture_link: string  
-    email: string  
-    country: string  
-    interesting_genres: string[] }
+    email: string
+    new_subscription: string }
 
 Description:
-Actualiza el perfil del usuario con el mail recibido, actualizando el resto de los datos guardados en el body.
+Calcula cuanto debe pagar el usuario considerando new_subscription y su suscripcion actual. Si el monto es válido (>= 0) entonces
+le envía una request al endpoint /deposit del servicio Payments para realizar el pago.
 
 Responses:
 
@@ -442,18 +428,12 @@ Responses:
 
 ## __POST /profiles/validate_subscription__
 
-IVI
-
 Request Body:  
     { 
-    name: string  
-    profile_picture_link: string  
-    email: string  
-    country: string  
-    interesting_genres: string[] }
+    name: string }
 
 Description:
-Actualiza el perfil del usuario con el mail recibido, actualizando el resto de los datos guardados en el body.
+Llamada cuando un usuario hace login. Hace una request a Payments para conseguir el ultimo deposito realizado por el usuario (si tiene una suscripcion distinta de Free). Si el tiempo desde el ultimo deposito es menor a un mes sigue con el login normal. Si el tiempo es mayor a un mes entonces se envia una request al endpoint /deposit del servicio Payments para realizar el pago y mantener la suscripcion. Si el pago es exitoso el usuario mantiene su suscripcion. Si el pago falla entonces se modifica la suscripcion del usuario devuelta a Free.
 
 Responses:
 
