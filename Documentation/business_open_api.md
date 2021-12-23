@@ -267,3 +267,19 @@ Responses:
 
 * error => {"status":"error", "message": ... }
 
+## __GET /courses/:id/studends/:user_email/:exam_name__
+
+Parameters: id, user_email, exam_name
+
+Request Body: None
+
+Description: 
+Retorna una lista con los estudiantes inscriptos en el curso, con la posibilidad de aplicar un filtro. Si exam_name es "none", entonces se devuelve
+una lista con todos los alumnos que están inscriptos, si se especifica un examen del curso, entonces se devuelve una lista con los alumnos que rindieron
+ese examen, independientemente de su estado de correción o su nota.
+
+Responses:
+
+* success => {"status":"ok", "message": ..., "names": students_names }
+
+* error => {"status":"error", "message": ... }
