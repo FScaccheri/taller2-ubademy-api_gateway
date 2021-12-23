@@ -101,7 +101,7 @@ Request Body:
 
 Description:
 Crea un examen de nombre exam_name para el curso de course_id recibido utilizando questions para guardar el enunciado. El parámetro
-exam_creator_email está para corroborar que el que modifica el examen es el creador.
+exam_creator_email está para corroborar que el que crea el examen es el creador del curso.
 
 Responses:
 
@@ -109,7 +109,9 @@ Responses:
 
 * error => {"status":"error", "message": ... }
 
-## __POST /courses/publish_exam__
+
+
+## __POST /courses/edit_exam__
 
 Request Body:  
     { 
@@ -119,11 +121,93 @@ Request Body:
     exam_creator_email: String }
 
 Description:
-Crea un examen de nombre exam_name para el curso de course_id recibido utilizando questions para guardar el enunciado. El parámetro
-exam_creator_email está para corroborar que el que modifica el examen es el creador.
+Crea un examen de nombre exam_name para el curso de course_id recibido utilizando questions para modificar el enunciado. El parámetro
+exam_creator_email está para corroborar que el que edita el examen es el creador del curso.
 
 Responses:
 
 * success => {"status":"ok", "message": ... }
+
+* error => {"status":"error", "message": ... }
+
+
+
+## __POST /courses/publish_exam__
+
+Request Body:  
+    { 
+    course_id: String,  
+    exam_name: String,  
+    exam_creator_email: String }
+
+Description:
+Publica el examen de nombre exam_name para el curso de course_id recibido, haciendo sea visible para los alumnos y que no pueda ser 
+editado a partir de este momento. El parámetro exam_creator_email está para corroborar que el que modifica el examen es el creador.
+
+Responses:
+
+* success => {"status":"ok", "message": ... }
+
+* error => {"status":"error", "message": ... }
+
+
+## __POST /courses/complete_exam__
+
+Request Body:  
+    { 
+    course_id: String,  
+    answers: Array.of(String),  
+    exam_name: String,  
+    student_email: String }
+
+Description:
+Introduce en el sistema las respuestas de un estudiante del curso para un examen publicado. El parámetro answers debe tener la misma cantidad
+de elementos que cantidad de preguntas tenga el examen.
+
+Responses:
+
+* success => {"status":"ok", "message": ... }
+
+* error => {"status":"error", "message": ... }
+
+## __POST /courses/grade_exam__
+
+Request Body:  
+    { 
+    course_id: String,
+    corrections: Array.of(String),
+    exam_name: String,
+    student_email: String,
+    professor_email: String,
+    mark: Number.min(0).max(10) }
+
+Description:
+Introduce en el sistema las correcciones de un docente para un examen de un estudiante del curso, junto con la nota que le asigna. 
+El parámetro corrections debe tener la misma cantidad de elementos que cantidad de preguntas tenga el examen. Una nota de 4 a 10 se considera
+como aprobado, el resto se considera reprobado. En caso de que el examen haya sido aprobado, se corroborará si el alumno aprobó todos los exámenes
+publicados del curso, agregando el curso a su lista de cursos aprobados si se da el caso.
+
+Responses:
+
+* success => {"status":"ok", "message": ... }
+
+* error => {"status":"error", "message": ... }
+
+## __GET /courses/exams/:id/:filter/:user_email__
+
+Parameters: id, filter, user_email
+
+Request Body: None
+
+Description: 
+Retorna una lista con los nombres de los exámenes de los cursos y su estado de publicación, filtrados según el tipo de filtro que haya recibido.
+Si filter es none retornará todos los exámenes, si es published retornará solo los publicados, y si es not_published 
+retornará solo los no publicados. Si el usuario es un estudiante del curso y pide los exámenes con algún filtro, se
+ignorará y se retornarán los exámenes publicados. Si el usuario no pertenece al curso (no es estudiante ni docente)
+se rechazará el pedido.
+
+Responses:
+
+* success => {"status":"ok", "message": ..., "courses": exams_list }
 
 * error => {"status":"error", "message": ... }
