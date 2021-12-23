@@ -28,7 +28,7 @@ def test_get_course(mock_get_course):
         }
     }
 
-    response = client.get('/courses/5')
+    response = client.get('/courses/data/5')
     response_data = response.json()
 
     assert response.status_code != 400
@@ -170,7 +170,7 @@ def test_course_exams(mock_course_exams):
         ]
     }
 
-    response = client.get('/courses/1/exams')
+    response = client.get('/courses/1/exams/none')
     response_data = response.json()
 
     assert response.status_code != 400
