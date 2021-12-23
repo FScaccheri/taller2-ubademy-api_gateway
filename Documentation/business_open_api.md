@@ -283,3 +283,38 @@ Responses:
 * success => {"status":"ok", "message": ..., "names": students_names }
 
 * error => {"status":"error", "message": ... }
+
+## __GET /courses/passing_courses/:user_email__
+
+Parameters: user_email
+
+Request Body: None
+
+Description: 
+Retorna una lista con el nombre y el creador del curso para cada curso que haya aprobado completamente el usuario de mail user_email. Retorna
+error si el perfil del usuario no existe.
+
+Responses:
+
+* success => {"status":"ok", "message": ..., "names": students_names }
+
+* error => {"status":"error", "message": ... }
+
+## __POST /courses/grade_course__
+
+Request Body:  
+    { 
+    course_id: String,  
+    user_email: String,  
+    comment: String,  
+    grade: Number.min(0).max(5) }
+
+Description:
+Agrega la opinion del usuario user_email a la lista de opiniones del curso. Retorna error si el usuario ya había realizado una review anterior
+o si no es un alumno inscripto en el curso.
+
+Responses:
+
+* success => {"status":"ok", "message": ... }
+
+* error => {"status":"error", "message": ... }
